@@ -3,1378 +3,791 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0c4a6e">
 <title>釜山家族旅遊 2026</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script>
-tailwind.config = {
-  theme: {
-    extend: {
-      fontFamily: {
-        heading: ['Outfit', 'Noto Sans TC', 'sans-serif'],
-        body: ['Noto Sans TC', 'Outfit', 'sans-serif'],
-        kr: ['Noto Sans KR', 'sans-serif'],
-      },
-      colors: {
-        brand: { 50:'#f0f9ff',100:'#e0f2fe',200:'#bae6fd',300:'#7dd3fc',400:'#38bdf8',500:'#0ea5e9',600:'#0284c7',700:'#0369a1' },
-        coral: { 50:'#fff7ed',100:'#ffedd5',400:'#fb923c',500:'#f97316' },
-        surface: { 50:'#f8fafc',100:'#f1f5f9' }
-      }
-    }
-  }
-}
+tailwind.config={theme:{extend:{fontFamily:{heading:['Outfit','Noto Sans TC','sans-serif'],body:['Noto Sans TC','Outfit','sans-serif'],kr:['Noto Sans KR','sans-serif']},colors:{brand:{50:'#f0f9ff',100:'#e0f2fe',200:'#bae6fd',300:'#7dd3fc',400:'#38bdf8',500:'#0ea5e9',600:'#0284c7',700:'#0369a1'},surface:{50:'#f8fafc',100:'#f1f5f9'}}}}}
 </script>
 <style>
-  *{-webkit-tap-highlight-color:transparent}
-  body{font-family:'Noto Sans TC','Outfit',sans-serif}
-  .no-scrollbar::-webkit-scrollbar{display:none}
-  .no-scrollbar{scrollbar-width:none}
-  .tab-pill{transition:all .25s ease-out}
-  .tab-pill.active{background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;box-shadow:0 4px 14px rgba(14,165,233,.35)}
-  .day-panel{display:none;animation:fadeUp .3s ease-out}
-  .day-panel.active{display:block}
-  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-  @media(prefers-reduced-motion:reduce){.day-panel{animation:none}.tab-pill{transition:none}}
-  .timeline-dot{width:12px;height:12px;border-radius:50%;border:2.5px solid #fff;box-shadow:0 0 0 2px currentColor;position:absolute;left:-6px;top:18px;z-index:2}
-  .card-hover{transition:transform .2s ease-out,box-shadow .2s ease-out}
-  .card-hover:active{transform:scale(.98)}
-  .hero-gradient{background:linear-gradient(135deg,#0c4a6e 0%,#0369a1 40%,#0ea5e9 100%)}
-  /* Action buttons row */
-  .action-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-  .action-btn{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:4px 10px;border-radius:99px;cursor:pointer;text-decoration:none;min-height:32px;transition:opacity .15s}
-  .action-btn:active{opacity:.7}
-  .action-btn.map{background:#e0f2fe;color:#0369a1}
-  .action-btn.uber{background:#0a0a0a;color:#fff}
-  .action-btn.kr{background:#fef3c7;color:#92400e}
-  .action-btn svg{flex-shrink:0}
-  /* Korean address popover */
-  .kr-popup{display:none;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:10px 14px;margin-top:6px;font-family:'Noto Sans KR',sans-serif}
-  .kr-popup.show{display:block}
-  .kr-popup .kr-name{font-size:15px;font-weight:700;color:#92400e;margin-bottom:2px}
-  .kr-popup .kr-addr{font-size:13px;color:#a16207;line-height:1.5}
-  .kr-popup .kr-copy{font-size:11px;color:#d97706;margin-top:6px;cursor:pointer;text-decoration:underline}
+*{-webkit-tap-highlight-color:transparent;box-sizing:border-box}
+body{font-family:'Noto Sans TC','Outfit',sans-serif;padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{scrollbar-width:none}
+/* Page sections */
+.page{display:none;animation:fadeUp .25s ease-out}.page.active{display:block}
+.sub-panel{display:none;animation:fadeUp .2s ease-out}.sub-panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.page,.sub-panel{animation:none}}
+/* Bottom Nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid #e2e8f0;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;font-size:10px;font-weight:500;color:#94a3b8;cursor:pointer;transition:color .15s;min-height:44px;justify-content:center;-webkit-tap-highlight-color:transparent}
+.nav-item.active{color:#0ea5e9}.nav-item.active svg{stroke-width:2.5}
+.nav-item.emergency{color:#ef4444}.nav-item.emergency.active{color:#dc2626}
+/* Day pills */
+.day-pill{transition:all .2s ease-out;cursor:pointer;min-height:44px}
+.day-pill.active{background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;box-shadow:0 4px 12px rgba(14,165,233,.3)}
+/* Timeline */
+.tl-dot{width:10px;height:10px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 2px currentColor;position:absolute;left:-5px;top:16px;z-index:2}
+.tl-card{transition:transform .15s ease-out}.tl-card:active{transform:scale(.98)}
+/* Action buttons */
+.act-row{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.act-btn{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:4px 10px;border-radius:99px;cursor:pointer;text-decoration:none;min-height:30px;transition:opacity .15s}
+.act-btn:active{opacity:.7}
+.act-btn.map{background:#e0f2fe;color:#0369a1}
+.act-btn.uber{background:#0a0a0a;color:#fff}
+.act-btn.kr{background:#fef3c7;color:#92400e}
+.act-btn svg{flex-shrink:0}
+/* KR popup */
+.kr-popup{display:none;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:8px 12px;margin-top:6px;font-family:'Noto Sans KR',sans-serif}
+.kr-popup.show{display:block}
+.kr-popup .kr-name{font-size:14px;font-weight:700;color:#92400e;margin-bottom:1px}
+.kr-popup .kr-addr{font-size:12px;color:#a16207;line-height:1.4}
+.kr-popup .kr-copy{font-size:10px;color:#d97706;margin-top:4px;cursor:pointer;text-decoration:underline}
+/* Phrase card */
+.phrase-card{cursor:pointer;transition:background .15s}.phrase-card:active{background:#ede9fe}
+/* Header compact */
+.header-bar{background:linear-gradient(135deg,#0c4a6e,#0369a1);position:sticky;top:0;z-index:50;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+/* Drag handle & dragging state */
+.drag-handle{cursor:grab;touch-action:none;color:#cbd5e1;padding:4px 6px 4px 2px;display:flex;align-items:center;flex-shrink:0}
+.drag-handle:active{cursor:grabbing}
+.dragging{opacity:0.8;box-shadow:0 8px 25px rgba(0,0,0,.15);z-index:10;transform:scale(1.01);}
+.drag-placeholder{border:2px dashed #cbd5e1;border-radius:12px;background:#f8fafc;margin-bottom:0}
+/* Transit bar */
+.transit-bar{display:flex;align-items:center;gap:8px;padding:6px 8px;margin:2px 0;cursor:pointer;border-radius:8px;transition:background .15s}
+.transit-bar:active{background:#f1f5f9}
+/* Nearby buttons row */
+.nearby-row{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.nearby-btn{display:inline-flex;align-items:center;gap:2px;font-size:9px;font-weight:600;padding:3px 8px;border-radius:99px;cursor:pointer;text-decoration:none;min-height:26px;transition:opacity .15s;white-space:nowrap}
+.nearby-btn:active{opacity:.7}
+/* Reset order button */
+.reset-order-btn{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:5px 12px;border-radius:99px;background:#f1f5f9;color:#64748b;cursor:pointer;border:none;transition:background .15s;margin-bottom:8px}
+.reset-order-btn:active{background:#e2e8f0}
 </style>
 </head>
 <body class="bg-surface-50 text-slate-800 antialiased">
 
-<!-- Header -->
-<header class="hero-gradient text-white px-5 pt-[env(safe-area-inset-top)] sticky top-0 z-50">
-  <div class="py-5 text-center max-w-lg mx-auto">
-    <p class="text-xs font-medium tracking-widest uppercase text-sky-200 mb-1">2026 Family Trip</p>
-    <h1 class="font-heading text-[22px] font-bold tracking-tight">Korea Busan</h1>
-    <p class="text-sky-200 text-[13px] mt-1 font-light">05 / 12 Tue — 05 / 16 Sat &middot; 5 Days</p>
-    <div id="countdown" class="mt-2 text-[11px] font-semibold text-sky-100 bg-white/10 rounded-full px-4 py-1 inline-block"></div>
+<!-- ========== COMPACT HEADER ========== -->
+<header class="header-bar text-white">
+  <div>
+    <h1 class="font-heading text-[16px] font-bold leading-tight">Korea Busan 2026</h1>
+    <p class="text-sky-200 text-[11px]">05/12 — 05/16 &middot; 5 Days</p>
   </div>
+  <div id="countdown" class="text-[10px] font-semibold text-sky-100 bg-white/15 rounded-full px-3 py-1"></div>
 </header>
 
-<!-- Tab Navigation -->
-<nav class="sticky top-[85px] z-40 bg-white/80 backdrop-blur-xl border-b border-slate-100">
-  <div class="flex gap-2 px-4 py-2.5 overflow-x-auto no-scrollbar">
-    <button class="tab-pill active flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold text-slate-500 bg-slate-100 cursor-pointer min-h-[44px] flex items-center" data-day="overview">Overview</button>
-    <button class="tab-pill flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold text-slate-500 bg-slate-100 cursor-pointer min-h-[44px] flex flex-col items-center justify-center leading-tight" data-day="day1"><span class="text-[13px] font-bold">D1</span><span class="text-[10px] font-normal opacity-70">5/12</span></button>
-    <button class="tab-pill flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold text-slate-500 bg-slate-100 cursor-pointer min-h-[44px] flex flex-col items-center justify-center leading-tight" data-day="day2"><span class="text-[13px] font-bold">D2</span><span class="text-[10px] font-normal opacity-70">5/13</span></button>
-    <button class="tab-pill flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold text-slate-500 bg-slate-100 cursor-pointer min-h-[44px] flex flex-col items-center justify-center leading-tight" data-day="day3"><span class="text-[13px] font-bold">D3</span><span class="text-[10px] font-normal opacity-70">5/14</span></button>
-    <button class="tab-pill flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold text-slate-500 bg-slate-100 cursor-pointer min-h-[44px] flex flex-col items-center justify-center leading-tight" data-day="day4"><span class="text-[13px] font-bold">D4</span><span class="text-[10px] font-normal opacity-70">5/15</span></button>
-    <button class="tab-pill flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold text-slate-500 bg-slate-100 cursor-pointer min-h-[44px] flex flex-col items-center justify-center leading-tight" data-day="day5"><span class="text-[13px] font-bold">D5</span><span class="text-[10px] font-normal opacity-70">5/16</span></button>
-    <div class="w-px bg-slate-200 flex-shrink-0 my-2"></div>
-    <button class="tab-pill flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold text-slate-500 bg-slate-100 cursor-pointer min-h-[44px] flex items-center gap-1" data-day="tools"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>Tools</button>
+<!-- ========== PAGE: ITINERARY ========== -->
+<div class="page active" id="page-itinerary">
+  <!-- Day Selector -->
+  <div class="sticky top-[52px] z-40 bg-white/85 backdrop-blur-xl border-b border-slate-100">
+    <div class="flex gap-2 px-4 py-2 overflow-x-auto no-scrollbar">
+      <button class="day-pill active flex-shrink-0 px-4 py-1.5 rounded-full text-[12px] font-semibold text-slate-500 bg-slate-100 flex items-center" data-day="overview">總覽</button>
+      <button class="day-pill flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-semibold text-slate-500 bg-slate-100 flex flex-col items-center leading-tight" data-day="day1"><span class="font-bold">D1</span><span class="text-[9px] opacity-70">5/12</span></button>
+      <button class="day-pill flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-semibold text-slate-500 bg-slate-100 flex flex-col items-center leading-tight" data-day="day2"><span class="font-bold">D2</span><span class="text-[9px] opacity-70">5/13</span></button>
+      <button class="day-pill flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-semibold text-slate-500 bg-slate-100 flex flex-col items-center leading-tight" data-day="day3"><span class="font-bold">D3</span><span class="text-[9px] opacity-70">5/14</span></button>
+      <button class="day-pill flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-semibold text-slate-500 bg-slate-100 flex flex-col items-center leading-tight" data-day="day4"><span class="font-bold">D4</span><span class="text-[9px] opacity-70">5/15</span></button>
+      <button class="day-pill flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-semibold text-slate-500 bg-slate-100 flex flex-col items-center leading-tight" data-day="day5"><span class="font-bold">D5</span><span class="text-[9px] opacity-70">5/16</span></button>
+    </div>
+  </div>
+
+  <!-- Overview -->
+  <div class="sub-panel active px-4 pt-4 pb-6 max-w-lg mx-auto" id="overview">
+    <div class="grid grid-cols-3 gap-2.5 mb-4">
+      <div class="bg-white rounded-2xl p-3 text-center shadow-sm"><div class="font-heading text-xl font-extrabold text-brand-600">5</div><div class="text-[10px] text-slate-400">Days</div></div>
+      <div class="bg-white rounded-2xl p-3 text-center shadow-sm"><div class="font-heading text-xl font-extrabold text-brand-600">4</div><div class="text-[10px] text-slate-400">Nights</div></div>
+      <div class="bg-white rounded-2xl p-3 text-center shadow-sm"><div class="font-heading text-xl font-extrabold text-brand-600">7+</div><div class="text-[10px] text-slate-400">Spots</div></div>
+    </div>
+    <!-- Flight -->
+    <div class="bg-gradient-to-br from-brand-50 to-brand-100 rounded-2xl p-3.5 mb-3 border border-brand-200">
+      <h3 class="text-[12px] font-bold text-brand-700 mb-2">航班資訊</h3>
+      <div class="space-y-1.5">
+        <div class="flex items-center gap-2.5 bg-white/60 rounded-xl px-3 py-2"><div class="w-7 h-7 rounded-lg bg-brand-500 text-white flex items-center justify-center text-[11px] font-bold">去</div><div class="flex-1"><div class="text-[11px] font-semibold text-slate-700">IT210 &middot; 5/12 16:40</div><div class="text-[10px] text-slate-400">桃園 → 金海</div></div></div>
+        <div class="flex items-center gap-2.5 bg-white/60 rounded-xl px-3 py-2"><div class="w-7 h-7 rounded-lg bg-orange-400 text-white flex items-center justify-center text-[11px] font-bold">回</div><div class="flex-1"><div class="text-[11px] font-semibold text-slate-700">IT211 &middot; 5/16 20:40</div><div class="text-[10px] text-slate-400">金海 → 桃園</div></div></div>
+      </div>
+    </div>
+    <!-- Hotels -->
+    <div class="bg-white rounded-2xl p-3.5 mb-3 shadow-sm">
+      <h3 class="text-[12px] font-bold text-slate-700 mb-2">住宿</h3>
+      <div class="space-y-1.5">
+        <div class="flex items-center gap-2.5 rounded-xl bg-violet-50 px-3 py-2"><div class="w-2 h-2 rounded-full bg-violet-400"></div><div><div class="text-[11px] font-semibold text-slate-700">D1-2 Paramion 飯店</div><div class="text-[10px] text-slate-400">남포동</div></div></div>
+        <div class="flex items-center gap-2.5 rounded-xl bg-violet-50 px-3 py-2"><div class="w-2 h-2 rounded-full bg-violet-400"></div><div><div class="text-[11px] font-semibold text-slate-700">D3-4 海雲台民宿</div><div class="text-[10px] text-slate-400">Airbnb</div></div></div>
+      </div>
+    </div>
+    <!-- Tickets -->
+    <div class="bg-white rounded-2xl p-3.5 mb-3 shadow-sm">
+      <h3 class="text-[12px] font-bold text-slate-700 mb-2">已訂票券</h3>
+      <div class="grid grid-cols-2 gap-1.5">
+        <div class="rounded-lg bg-emerald-50 border border-emerald-100 px-2.5 py-2 text-[10px] font-medium text-emerald-700"><svg class="w-3 h-3 inline mr-0.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>松島灣纜車</div>
+        <div class="rounded-lg bg-emerald-50 border border-emerald-100 px-2.5 py-2 text-[10px] font-medium text-emerald-700"><svg class="w-3 h-3 inline mr-0.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Skyline Luge</div>
+        <div class="rounded-lg bg-emerald-50 border border-emerald-100 px-2.5 py-2 text-[10px] font-medium text-emerald-700"><svg class="w-3 h-3 inline mr-0.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>樂天世界</div>
+        <div class="rounded-lg bg-emerald-50 border border-emerald-100 px-2.5 py-2 text-[10px] font-medium text-emerald-700"><svg class="w-3 h-3 inline mr-0.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>SEALIFE</div>
+        <div class="rounded-lg bg-emerald-50 border border-emerald-100 px-2.5 py-2 text-[10px] font-medium text-emerald-700"><svg class="w-3 h-3 inline mr-0.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>X the SKY</div>
+        <div class="rounded-lg bg-emerald-50 border border-emerald-100 px-2.5 py-2 text-[10px] font-medium text-emerald-700"><svg class="w-3 h-3 inline mr-0.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>藍線公園</div>
+        <div class="rounded-lg bg-emerald-50 border border-emerald-100 px-2.5 py-2 text-[10px] font-medium text-emerald-700 col-span-2"><svg class="w-3 h-3 inline mr-0.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>ARTE MUSEUM</div>
+      </div>
+    </div>
+    <!-- Weather inline -->
+    <div class="bg-white rounded-2xl p-3.5 shadow-sm">
+      <h3 class="text-[12px] font-bold text-slate-700 mb-2">釜山天氣</h3>
+      <div class="grid grid-cols-5 gap-1.5 text-center">
+        <div class="bg-sky-50 rounded-xl p-1.5"><div class="text-[9px] text-slate-400">5/12</div><div class="text-base" id="w-icon-0">--</div><div class="text-[11px] font-bold text-slate-700" id="w-temp-0">--</div><div class="text-[8px] text-slate-400" id="w-desc-0">載入</div></div>
+        <div class="bg-sky-50 rounded-xl p-1.5"><div class="text-[9px] text-slate-400">5/13</div><div class="text-base" id="w-icon-1">--</div><div class="text-[11px] font-bold text-slate-700" id="w-temp-1">--</div><div class="text-[8px] text-slate-400" id="w-desc-1">載入</div></div>
+        <div class="bg-sky-50 rounded-xl p-1.5"><div class="text-[9px] text-slate-400">5/14</div><div class="text-base" id="w-icon-2">--</div><div class="text-[11px] font-bold text-slate-700" id="w-temp-2">--</div><div class="text-[8px] text-slate-400" id="w-desc-2">載入</div></div>
+        <div class="bg-sky-50 rounded-xl p-1.5"><div class="text-[9px] text-slate-400">5/15</div><div class="text-base" id="w-icon-3">--</div><div class="text-[11px] font-bold text-slate-700" id="w-temp-3">--</div><div class="text-[8px] text-slate-400" id="w-desc-3">載入</div></div>
+        <div class="bg-sky-50 rounded-xl p-1.5"><div class="text-[9px] text-slate-400">5/16</div><div class="text-base" id="w-icon-4">--</div><div class="text-[11px] font-bold text-slate-700" id="w-temp-4">--</div><div class="text-[8px] text-slate-400" id="w-desc-4">載入</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAY PANELS — rendered by JS -->
+  <div class="sub-panel px-4 pt-4 pb-6 max-w-lg mx-auto" id="day1">
+    <div class="day-header bg-gradient-to-br from-brand-500 to-brand-700 rounded-2xl p-3.5 mb-4 text-white shadow-md">
+      <div class="text-[10px] text-sky-200 tracking-wider uppercase">Day 1 &middot; Tue</div>
+      <h2 class="font-heading text-base font-bold mt-0.5">出發日 — 永和 → 釜山</h2>
+      <p class="text-sky-200 text-[11px]">桃園出發，傍晚抵達金海機場</p>
+    </div>
+    <div id="day1-stops"></div>
+    <div class="mt-4 bg-violet-50 border border-violet-100 rounded-xl px-3 py-2.5 flex items-center gap-2"><svg class="w-4 h-4 text-violet-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21V7a2 2 0 012-2h6a2 2 0 012 2v14M21 21V11a2 2 0 00-2-2h-4a2 2 0 00-2 2v10"/></svg><span class="text-[11px] font-semibold text-violet-700">今晚：Paramion 飯店</span></div>
+  </div>
+
+  <div class="sub-panel px-4 pt-4 pb-6 max-w-lg mx-auto" id="day2">
+    <div class="day-header bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-3.5 mb-4 text-white shadow-md">
+      <div class="text-[10px] text-emerald-200 tracking-wider uppercase">Day 2 &middot; Wed</div>
+      <h2 class="font-heading text-base font-bold mt-0.5">南浦洞 &middot; 松島灣</h2>
+      <p class="text-emerald-200 text-[11px]">纜車、岩南公園、國際市場</p>
+    </div>
+    <div id="day2-stops"></div>
+    <div class="mt-4 bg-violet-50 border border-violet-100 rounded-xl px-3 py-2.5 flex items-center gap-2"><svg class="w-4 h-4 text-violet-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21V7a2 2 0 012-2h6a2 2 0 012 2v14M21 21V11a2 2 0 00-2-2h-4a2 2 0 00-2 2v10"/></svg><span class="text-[11px] font-semibold text-violet-700">今晚：Paramion 飯店</span></div>
+  </div>
+
+  <div class="sub-panel px-4 pt-4 pb-6 max-w-lg mx-auto" id="day3">
+    <div class="day-header bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl p-3.5 mb-4 text-white shadow-md">
+      <div class="text-[10px] text-amber-100 tracking-wider uppercase">Day 3 &middot; Thu</div>
+      <h2 class="font-heading text-base font-bold mt-0.5">海雲台 &middot; 灌籃高手平交道</h2>
+      <p class="text-amber-100 text-[11px]">藍線公園、SEALIFE、鹽烤肉</p>
+    </div>
+    <div id="day3-stops"></div>
+    <div class="mt-4 bg-violet-50 border border-violet-100 rounded-xl px-3 py-2.5 flex items-center gap-2"><svg class="w-4 h-4 text-violet-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21V7a2 2 0 012-2h6a2 2 0 012 2v14M21 21V11a2 2 0 00-2-2h-4a2 2 0 00-2 2v10"/></svg><span class="text-[11px] font-semibold text-violet-700">今晚：海雲台民宿（Airbnb）</span></div>
+  </div>
+
+  <div class="sub-panel px-4 pt-4 pb-6 max-w-lg mx-auto" id="day4">
+    <div class="day-header bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl p-3.5 mb-4 text-white shadow-md">
+      <div class="text-[10px] text-rose-200 tracking-wider uppercase">Day 4 &middot; Fri</div>
+      <h2 class="font-heading text-base font-bold mt-0.5">海雲台玩樂日</h2>
+      <p class="text-rose-200 text-[11px]">Luge、樂天世界、生醃螃蟹、炸雞</p>
+    </div>
+    <div id="day4-stops"></div>
+    <div class="mt-4 bg-violet-50 border border-violet-100 rounded-xl px-3 py-2.5 flex items-center gap-2"><svg class="w-4 h-4 text-violet-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21V7a2 2 0 012-2h6a2 2 0 012 2v14M21 21V11a2 2 0 00-2-2h-4a2 2 0 00-2 2v10"/></svg><span class="text-[11px] font-semibold text-violet-700">今晚：海雲台民宿（Airbnb）</span></div>
+  </div>
+
+  <div class="sub-panel px-4 pt-4 pb-6 max-w-lg mx-auto" id="day5">
+    <div class="day-header bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-3.5 mb-4 text-white shadow-md">
+      <div class="text-[10px] text-violet-200 tracking-wider uppercase">Day 5 &middot; Sat</div>
+      <h2 class="font-heading text-base font-bold mt-0.5">回程日 — 釜山 → 桃園</h2>
+      <p class="text-violet-200 text-[11px]">ARTE MUSEUM、X the SKY、晚班機回台</p>
+    </div>
+    <div id="day5-stops"></div>
+  </div>
+</div>
+
+<!-- ========== PAGE: KOREAN ========== -->
+<div class="page px-4 pt-4 pb-6 max-w-lg mx-auto" id="page-korean">
+  <h2 class="font-heading text-base font-bold mb-3">常用韓語</h2>
+  <p class="text-[10px] text-slate-400 mb-3">點擊播放發音</p>
+  <div class="space-y-1.5">
+    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">打招呼</div>
+    <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5" onclick="speakKr('안녕하세요')"><div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">你好</div><div class="font-kr text-[14px] font-bold text-violet-700">안녕하세요</div><div class="text-[10px] text-slate-400">an-nyeong-ha-se-yo</div></div><svg class="w-5 h-5 text-violet-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+    <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5" onclick="speakKr('감사합니다')"><div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">謝謝</div><div class="font-kr text-[14px] font-bold text-violet-700">감사합니다</div><div class="text-[10px] text-slate-400">gam-sa-ham-ni-da</div></div><svg class="w-5 h-5 text-violet-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+    <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5" onclick="speakKr('죄송합니다')"><div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">對不起</div><div class="font-kr text-[14px] font-bold text-violet-700">죄송합니다</div><div class="text-[10px] text-slate-400">joe-song-ham-ni-da</div></div><svg class="w-5 h-5 text-violet-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+
+    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-3 mb-1">餐廳</div>
+    <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5" onclick="speakKr('이거 주세요')"><div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">請給我這個</div><div class="font-kr text-[14px] font-bold text-violet-700">이거 주세요</div><div class="text-[10px] text-slate-400">i-geo ju-se-yo</div></div><svg class="w-5 h-5 text-violet-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+    <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5" onclick="speakKr('메뉴판 주세요')"><div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">請給我菜單</div><div class="font-kr text-[14px] font-bold text-violet-700">메뉴판 주세요</div><div class="text-[10px] text-slate-400">me-nyu-pan ju-se-yo</div></div><svg class="w-5 h-5 text-violet-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+    <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5" onclick="speakKr('계산해 주세요')"><div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">請結帳</div><div class="font-kr text-[14px] font-bold text-violet-700">계산해 주세요</div><div class="text-[10px] text-slate-400">gye-san-hae ju-se-yo</div></div><svg class="w-5 h-5 text-violet-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+    <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5" onclick="speakKr('물 좀 주세요')"><div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">請給我水</div><div class="font-kr text-[14px] font-bold text-violet-700">물 좀 주세요</div><div class="text-[10px] text-slate-400">mul jom ju-se-yo</div></div><svg class="w-5 h-5 text-violet-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+    <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5" onclick="speakKr('맛있어요')"><div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">很好吃!</div><div class="font-kr text-[14px] font-bold text-violet-700">맛있어요!</div><div class="text-[10px] text-slate-400">ma-si-sseo-yo</div></div><svg class="w-5 h-5 text-violet-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+
+    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-3 mb-1">交通 / 計程車</div>
+    <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5" onclick="speakKr('여기로 가 주세요')"><div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">請到這裡</div><div class="font-kr text-[14px] font-bold text-violet-700">여기로 가 주세요</div><div class="text-[10px] text-slate-400">yeo-gi-ro ga ju-se-yo</div></div><svg class="w-5 h-5 text-violet-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+    <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5" onclick="speakKr('여기서 내려 주세요')"><div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">請在這裡讓我下車</div><div class="font-kr text-[14px] font-bold text-violet-700">여기서 내려 주세요</div><div class="text-[10px] text-slate-400">yeo-gi-seo nae-ryeo ju-se-yo</div></div><svg class="w-5 h-5 text-violet-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+    <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5" onclick="speakKr('얼마예요')"><div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">多少錢？</div><div class="font-kr text-[14px] font-bold text-violet-700">얼마예요?</div><div class="text-[10px] text-slate-400">eol-ma-ye-yo</div></div><svg class="w-5 h-5 text-violet-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+    <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5" onclick="speakKr('카드 돼요?')"><div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">可以刷卡嗎？</div><div class="font-kr text-[14px] font-bold text-violet-700">카드 돼요?</div><div class="text-[10px] text-slate-400">ka-deu dwae-yo</div></div><svg class="w-5 h-5 text-violet-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+
+    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-3 mb-1">購物 / 求助</div>
+    <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5" onclick="speakKr('좀 깎아 주세요')"><div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">算便宜一點</div><div class="font-kr text-[14px] font-bold text-violet-700">좀 깎아 주세요</div><div class="text-[10px] text-slate-400">jom kka-kka ju-se-yo</div></div><svg class="w-5 h-5 text-violet-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+    <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5" onclick="speakKr('화장실 어디예요')"><div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">廁所在哪裡？</div><div class="font-kr text-[14px] font-bold text-violet-700">화장실 어디예요?</div><div class="text-[10px] text-slate-400">hwa-jang-sil eo-di-ye-yo</div></div><svg class="w-5 h-5 text-violet-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+    <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5" onclick="speakKr('도와주세요')"><div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">請幫幫我</div><div class="font-kr text-[14px] font-bold text-violet-700">도와주세요</div><div class="text-[10px] text-slate-400">do-wa-ju-se-yo</div></div><svg class="w-5 h-5 text-violet-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+  </div>
+</div>
+
+<!-- ========== PAGE: TOOLS (Currency + Expense) ========== -->
+<div class="page px-4 pt-4 pb-6 max-w-lg mx-auto" id="page-tools">
+  <h2 class="font-heading text-base font-bold mb-3">工具</h2>
+  <!-- Currency -->
+  <div class="bg-white rounded-2xl p-3.5 mb-4 shadow-sm">
+    <h3 class="text-[12px] font-bold text-slate-700 mb-2">匯率換算</h3>
+    <div class="flex items-center gap-2.5 mb-2">
+      <div class="flex-1"><label class="text-[9px] text-slate-400 font-semibold block mb-0.5">TWD</label><input id="twd-input" type="number" inputmode="decimal" placeholder="100" value="100" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-[13px] font-semibold focus:outline-none focus:border-brand-400"></div>
+      <svg class="w-4 h-4 text-slate-300 mt-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+      <div class="flex-1"><label class="text-[9px] text-slate-400 font-semibold block mb-0.5">KRW</label><input id="krw-input" type="number" inputmode="decimal" placeholder="4500" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-[13px] font-semibold focus:outline-none focus:border-brand-400"></div>
+    </div>
+    <div class="text-[10px] text-slate-400 text-center" id="rate-display">1 TWD ≈ 45 KRW（參考值）</div>
+    <div class="grid grid-cols-4 gap-1.5 mt-2">
+      <button onclick="quickConvert(100)" class="bg-brand-50 text-brand-600 text-[10px] font-semibold py-1.5 rounded-lg cursor-pointer">$100</button>
+      <button onclick="quickConvert(500)" class="bg-brand-50 text-brand-600 text-[10px] font-semibold py-1.5 rounded-lg cursor-pointer">$500</button>
+      <button onclick="quickConvert(1000)" class="bg-brand-50 text-brand-600 text-[10px] font-semibold py-1.5 rounded-lg cursor-pointer">$1K</button>
+      <button onclick="quickConvert(5000)" class="bg-brand-50 text-brand-600 text-[10px] font-semibold py-1.5 rounded-lg cursor-pointer">$5K</button>
+    </div>
+  </div>
+  <!-- Expense -->
+  <div class="bg-white rounded-2xl p-3.5 mb-4 shadow-sm">
+    <h3 class="text-[12px] font-bold text-slate-700 mb-2">花費記帳</h3>
+    <div class="grid grid-cols-2 gap-2 mb-2.5">
+      <div class="bg-emerald-50 rounded-xl p-2.5 text-center"><div class="text-[9px] text-emerald-600 font-semibold">KRW</div><div class="font-heading text-base font-extrabold text-emerald-700" id="total-krw">0</div></div>
+      <div class="bg-brand-50 rounded-xl p-2.5 text-center"><div class="text-[9px] text-brand-600 font-semibold">≈ TWD</div><div class="font-heading text-base font-extrabold text-brand-700" id="total-twd">0</div></div>
+    </div>
+    <div class="flex gap-1.5 mb-2">
+      <input id="expense-desc" type="text" placeholder="項目" class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-[11px] focus:outline-none focus:border-brand-400">
+      <input id="expense-amount" type="number" inputmode="decimal" placeholder="金額(₩)" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-[11px] focus:outline-none focus:border-brand-400">
+      <button onclick="addExpense()" class="bg-emerald-500 text-white px-3 rounded-lg text-[10px] font-semibold cursor-pointer min-h-[36px]">+</button>
+    </div>
+    <div id="expense-list" class="space-y-1 max-h-48 overflow-y-auto"><div class="text-[10px] text-slate-300 text-center py-3">尚未記錄</div></div>
+    <button onclick="clearExpenses()" class="mt-2 text-[9px] text-slate-400 underline cursor-pointer">清除所有</button>
+  </div>
+  <!-- Packing -->
+  <div class="bg-white rounded-2xl p-3.5 shadow-sm">
+    <h3 class="text-[12px] font-bold text-slate-700 mb-2 flex items-center gap-2">行李打包<span id="pack-progress" class="ml-auto text-[10px] font-semibold text-slate-400">0/20</span></h3>
+    <div id="packing-list" class="space-y-1"></div>
+    <button onclick="resetPacking()" class="mt-2 text-[9px] text-slate-400 underline cursor-pointer">重置</button>
+  </div>
+</div>
+
+<!-- ========== PAGE: EMERGENCY ========== -->
+<div class="page px-4 pt-4 pb-6 max-w-lg mx-auto" id="page-emergency">
+  <h2 class="font-heading text-base font-bold mb-3 text-red-700">緊急資訊</h2>
+  <div class="bg-red-50 border border-red-200 rounded-2xl p-3.5 mb-4">
+    <div class="space-y-2 text-[12px]">
+      <a href="tel:112" class="flex items-center gap-3 bg-white rounded-xl px-3 py-3 shadow-sm"><span class="w-10 h-10 bg-red-500 text-white rounded-xl flex items-center justify-center font-bold text-sm">112</span><div><div class="font-semibold">報警</div><div class="text-[10px] text-slate-400">韓國警察</div></div></a>
+      <a href="tel:119" class="flex items-center gap-3 bg-white rounded-xl px-3 py-3 shadow-sm"><span class="w-10 h-10 bg-orange-500 text-white rounded-xl flex items-center justify-center font-bold text-sm">119</span><div><div class="font-semibold">急救 / 消防</div><div class="text-[10px] text-slate-400">救護車、火災</div></div></a>
+      <a href="tel:1330" class="flex items-center gap-3 bg-white rounded-xl px-3 py-3 shadow-sm"><span class="w-10 h-10 bg-brand-500 text-white rounded-xl flex items-center justify-center font-bold text-sm">1330</span><div><div class="font-semibold">觀光警察</div><div class="text-[10px] text-slate-400">有中文服務</div></div></a>
+      <a href="tel:+82-2-6329-6000" class="flex items-center gap-3 bg-white rounded-xl px-3 py-3 shadow-sm"><span class="w-10 h-10 bg-violet-500 text-white rounded-xl flex items-center justify-center text-[9px] font-bold">TW</span><div><div class="font-semibold">駐韓台北代表處</div><div class="text-[10px] text-slate-400">+82-2-6329-6000</div></div></a>
+      <a href="tel:+82-10-9080-2761" class="flex items-center gap-3 bg-white rounded-xl px-3 py-3 shadow-sm"><span class="w-10 h-10 bg-rose-500 text-white rounded-xl flex items-center justify-center text-[9px] font-bold">SOS</span><div><div class="font-semibold">急難救助手機</div><div class="text-[10px] text-slate-400">+82-10-9080-2761（代表處急難手機）</div></div></a>
+    </div>
+  </div>
+  <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3.5">
+    <h3 class="text-[12px] font-bold text-amber-700 mb-2">求助韓語</h3>
+    <div class="space-y-1.5">
+      <div class="phrase-card flex items-center gap-3 bg-white rounded-xl px-3 py-2.5" onclick="speakKr('도와주세요')"><div class="flex-1"><div class="text-[12px] font-semibold">請幫幫我</div><div class="font-kr text-[14px] font-bold text-red-600">도와주세요</div></div><svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+      <div class="phrase-card flex items-center gap-3 bg-white rounded-xl px-3 py-2.5" onclick="speakKr('병원에 데려다 주세요')"><div class="flex-1"><div class="text-[12px] font-semibold">請帶我去醫院</div><div class="font-kr text-[14px] font-bold text-red-600">병원에 데려다 주세요</div></div><svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+      <div class="phrase-card flex items-center gap-3 bg-white rounded-xl px-3 py-2.5" onclick="speakKr('저는 대만 사람이에요')"><div class="flex-1"><div class="text-[12px] font-semibold">我是台灣人</div><div class="font-kr text-[14px] font-bold text-red-600">저는 대만 사람이에요</div></div><svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== BOTTOM NAV ========== -->
+<nav class="bottom-nav">
+  <div class="grid grid-cols-4 max-w-lg mx-auto">
+    <div class="nav-item active" data-page="page-itinerary">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+      <span>行程</span>
+    </div>
+    <div class="nav-item" data-page="page-korean">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+      <span>韓語</span>
+    </div>
+    <div class="nav-item" data-page="page-tools">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span>工具</span>
+    </div>
+    <div class="nav-item emergency" data-page="page-emergency">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      <span>緊急</span>
+    </div>
   </div>
 </nav>
 
-<!-- ===== Overview ===== -->
-<div class="day-panel active px-4 pt-5 pb-24 max-w-lg mx-auto" id="overview">
-  <div class="grid grid-cols-3 gap-3 mb-5">
-    <div class="bg-white rounded-2xl p-4 text-center shadow-sm"><div class="font-heading text-2xl font-extrabold text-brand-600">5</div><div class="text-[11px] text-slate-400 mt-0.5">Days</div></div>
-    <div class="bg-white rounded-2xl p-4 text-center shadow-sm"><div class="font-heading text-2xl font-extrabold text-brand-600">4</div><div class="text-[11px] text-slate-400 mt-0.5">Nights</div></div>
-    <div class="bg-white rounded-2xl p-4 text-center shadow-sm"><div class="font-heading text-2xl font-extrabold text-brand-600">7+</div><div class="text-[11px] text-slate-400 mt-0.5">Spots</div></div>
-  </div>
-
-  <!-- Flight -->
-  <div class="bg-gradient-to-br from-brand-50 to-brand-100 rounded-2xl p-4 mb-4 border border-brand-200">
-    <h3 class="text-[13px] font-bold text-brand-700 mb-3 flex items-center gap-2">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>航班資訊
-    </h3>
-    <div class="space-y-2">
-      <div class="flex items-center gap-3 bg-white/60 rounded-xl px-3 py-2.5">
-        <div class="w-8 h-8 rounded-lg bg-brand-500 text-white flex items-center justify-center"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></div>
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">去程 IT210</div><div class="text-[11px] text-slate-400">5/12 16:40 桃園 → 金海</div></div>
-      </div>
-      <div class="flex items-center gap-3 bg-white/60 rounded-xl px-3 py-2.5">
-        <div class="w-8 h-8 rounded-lg bg-coral-500 text-white flex items-center justify-center"><svg class="w-4 h-4 rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></div>
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">回程 IT211</div><div class="text-[11px] text-slate-400">5/16 20:40 金海 → 桃園</div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Hotels -->
-  <div class="bg-white rounded-2xl p-4 mb-4 shadow-sm">
-    <h3 class="text-[13px] font-bold text-slate-700 mb-3 flex items-center gap-2">
-      <svg class="w-4 h-4 text-violet-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21V7a2 2 0 012-2h6a2 2 0 012 2v14M21 21V11a2 2 0 00-2-2h-4a2 2 0 00-2 2v10"/></svg>住宿安排
-    </h3>
-    <div class="space-y-2">
-      <div class="flex items-center gap-3 rounded-xl bg-violet-50 px-3 py-2.5">
-        <div class="w-2 h-2 rounded-full bg-violet-400"></div>
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">Day 1-2 Paramion 飯店</div><div class="text-[11px] text-slate-400">남포동 南浦站附近</div></div>
-        <a href="https://www.google.com/maps/search/파라미온+호텔+부산+남포동" target="_blank" class="action-btn map" style="margin:0"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-      </div>
-      <div class="flex items-center gap-3 rounded-xl bg-violet-50 px-3 py-2.5">
-        <div class="w-2 h-2 rounded-full bg-violet-400"></div>
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">Day 3-4 海雲台民宿</div><div class="text-[11px] text-slate-400">Airbnb</div></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tickets -->
-  <div class="bg-white rounded-2xl p-4 mb-4 shadow-sm">
-    <h3 class="text-[13px] font-bold text-slate-700 mb-3 flex items-center gap-2">
-      <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>已訂票券
-    </h3>
-    <div class="grid grid-cols-2 gap-2">
-      <div class="rounded-xl bg-emerald-50 border border-emerald-100 px-3 py-2.5 text-[11px] font-medium text-emerald-700"><svg class="w-3.5 h-3.5 inline mr-1 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>松島灣纜車</div>
-      <div class="rounded-xl bg-emerald-50 border border-emerald-100 px-3 py-2.5 text-[11px] font-medium text-emerald-700"><svg class="w-3.5 h-3.5 inline mr-1 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>Skyline Luge</div>
-      <div class="rounded-xl bg-emerald-50 border border-emerald-100 px-3 py-2.5 text-[11px] font-medium text-emerald-700"><svg class="w-3.5 h-3.5 inline mr-1 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>樂天世界</div>
-      <div class="rounded-xl bg-emerald-50 border border-emerald-100 px-3 py-2.5 text-[11px] font-medium text-emerald-700"><svg class="w-3.5 h-3.5 inline mr-1 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>SEALIFE</div>
-      <div class="rounded-xl bg-emerald-50 border border-emerald-100 px-3 py-2.5 text-[11px] font-medium text-emerald-700"><svg class="w-3.5 h-3.5 inline mr-1 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>X the SKY</div>
-      <div class="rounded-xl bg-emerald-50 border border-emerald-100 px-3 py-2.5 text-[11px] font-medium text-emerald-700"><svg class="w-3.5 h-3.5 inline mr-1 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>藍線公園</div>
-      <div class="rounded-xl bg-emerald-50 border border-emerald-100 px-3 py-2.5 text-[11px] font-medium text-emerald-700 col-span-2"><svg class="w-3.5 h-3.5 inline mr-1 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>ARTE MUSEUM</div>
-    </div>
-  </div>
-
-  <!-- Tips -->
-  <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-sm">
-    <h3 class="text-[13px] font-bold text-amber-700 mb-2 flex items-center gap-2">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>使用提示
-    </h3>
-    <div class="text-[11px] text-amber-700 space-y-1.5 leading-relaxed">
-      <p><strong class="text-amber-800">Map</strong> — 以目前位置為起點，直接導航到目的地</p>
-      <p><strong class="text-amber-800">Uber</strong> — 自動複製韓文地址，再開啟 Uber（貼上即可叫車）</p>
-      <p><strong class="text-amber-800">KR</strong> — 顯示韓文名稱和地址，方便直接給計程車司機看螢幕</p>
-      <p class="pt-1 border-t border-amber-200 mt-2 text-amber-600">手機 Uber App 點擊會自動帶入目的地；網頁版需手動貼上地址</p>
-      <p class="text-amber-600">韓國建議另外安裝 Naver Map 或 Kakao Map，路線更精準</p>
-    </div>
-  </div>
-</div>
-
-<!-- ===== DAY 1 ===== -->
-<div class="day-panel px-4 pt-5 pb-24 max-w-lg mx-auto" id="day1">
-  <div class="bg-gradient-to-br from-brand-500 to-brand-700 rounded-2xl p-4 mb-5 text-white shadow-lg shadow-brand-200">
-    <div class="text-[11px] font-medium text-sky-200 tracking-wider uppercase">Day 1 &middot; Tuesday</div>
-    <h2 class="font-heading text-lg font-bold mt-1">出發日 — 永和 → 釜山</h2>
-    <p class="text-sky-200 text-[12px] mt-1">桃園出發，傍晚抵達釜山金海機場</p>
-  </div>
-  <div class="relative pl-6 border-l-2 border-slate-200 space-y-4 ml-1.5">
-
-    <div class="relative card-hover"><div class="timeline-dot text-brand-500 bg-brand-500"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-brand-500 tracking-wide">13:00</div>
-        <div class="text-[13px] font-semibold mt-0.5">永和出門</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">前往桃園機場</div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-brand-500 bg-brand-500"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-brand-500 tracking-wide">14:00</div>
-        <div class="text-[13px] font-semibold mt-0.5">桃園機場 第一航廈</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">報到、安檢、候機</div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-brand-500 bg-brand-500"></div>
-      <div class="bg-gradient-to-br from-brand-50 to-brand-100 border border-brand-200 rounded-2xl p-3.5">
-        <div class="text-[11px] font-bold text-brand-600 tracking-wide">16:40</div>
-        <div class="text-[13px] font-bold mt-0.5 text-brand-700">
-          <svg class="w-4 h-4 inline mr-1 -mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>虎航 IT210 起飛
-        </div>
-        <div class="text-[11px] text-brand-500 mt-0.5">桃園 → 金海國際機場</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-brand-500 text-white px-2.5 py-0.5 rounded-full">航班</span>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-brand-500 bg-brand-500"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-brand-500 tracking-wide">19:55</div>
-        <div class="text-[13px] font-semibold mt-0.5">抵達金海國際機場</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">入境、提領行李</div>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/김해국제공항" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-slate-300 bg-slate-300"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-slate-400 tracking-wide">20:55</div>
-        <div class="text-[13px] font-semibold mt-0.5">UBER 前往飯店</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">車程約 35 分鐘</div>
-        <div class="action-row">
-          <a href="https://m.uber.com/ul/?action=setPickup&dropoff[formatted_address]=파라미온+호텔+부산&dropoff[latitude]=35.0982&dropoff[longitude]=129.0325" target="_blank" class="action-btn uber"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-7v4h4l-5 7z"/></svg>Uber</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">파라미온 호텔 부산</div>
-          <div class="kr-addr">부산광역시 중구 광복로 55 (남포동)</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-violet-400 bg-violet-400"></div>
-      <div class="bg-violet-50 border border-violet-100 rounded-2xl p-3.5">
-        <div class="text-[11px] font-bold text-violet-500 tracking-wide">21:30</div>
-        <div class="text-[13px] font-semibold mt-0.5 text-violet-700">Paramion 飯店 Check-in</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-violet-100 text-violet-600 px-2.5 py-0.5 rounded-full">住宿</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/파라미온+호텔+부산+남포동" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">파라미온 호텔 부산</div>
-          <div class="kr-addr">부산광역시 중구 광복로 55 (남포동)</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-rose-400 bg-rose-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-rose-400 tracking-wide">晚餐</div>
-        <div class="text-[13px] font-semibold mt-0.5">南浦雪濃湯</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-rose-50 text-rose-500 px-2.5 py-0.5 rounded-full">美食</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/남포설렁탕+부산" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">남포설렁탕</div>
-          <div class="kr-addr">부산광역시 중구 남포동 (광복로 부근)</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="mt-5 bg-violet-50 border border-violet-100 rounded-2xl px-4 py-3 flex items-center gap-3">
-    <svg class="w-5 h-5 text-violet-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21V7a2 2 0 012-2h6a2 2 0 012 2v14M21 21V11a2 2 0 00-2-2h-4a2 2 0 00-2 2v10"/></svg>
-    <span class="text-[12px] font-semibold text-violet-700">今晚住宿：Paramion 飯店</span>
-  </div>
-</div>
-
-<!-- ===== DAY 2 ===== -->
-<div class="day-panel px-4 pt-5 pb-24 max-w-lg mx-auto" id="day2">
-  <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-4 mb-5 text-white shadow-lg shadow-emerald-200">
-    <div class="text-[11px] font-medium text-emerald-200 tracking-wider uppercase">Day 2 &middot; Wednesday</div>
-    <h2 class="font-heading text-lg font-bold mt-1">南浦洞 &middot; 松島灣</h2>
-    <p class="text-emerald-200 text-[12px] mt-1">纜車、岩南公園、國際市場、在地美食</p>
-  </div>
-  <div class="relative pl-6 border-l-2 border-slate-200 space-y-4 ml-1.5">
-
-    <div class="relative card-hover"><div class="timeline-dot text-slate-300 bg-slate-300"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-slate-400 tracking-wide">09:30</div>
-        <div class="text-[13px] font-semibold mt-0.5">Paramion 飯店出發</div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-rose-400 bg-rose-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-rose-400 tracking-wide">12:00</div>
-        <div class="text-[13px] font-semibold mt-0.5">罐頭市場（早午餐）</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">順逛國際市場，買棉被</div>
-        <div class="flex gap-1.5 mt-1.5">
-          <span class="text-[10px] font-semibold bg-rose-50 text-rose-500 px-2.5 py-0.5 rounded-full">美食</span>
-          <span class="text-[10px] font-semibold bg-amber-50 text-amber-600 px-2.5 py-0.5 rounded-full">購物</span>
-        </div>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/통조림시장+부산" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <a href="https://m.uber.com/ul/?action=setPickup&dropoff[formatted_address]=통조림시장+부산&dropoff[latitude]=35.1003&dropoff[longitude]=129.0280" target="_blank" class="action-btn uber"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-7v4h4l-5 7z"/></svg>Uber</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">통조림시장 / 국제시장</div>
-          <div class="kr-addr">부산광역시 중구 국제시장2길 25 (신창동4가)</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-slate-300 bg-slate-300"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-slate-400 tracking-wide">—</div>
-        <div class="text-[13px] font-semibold mt-0.5">回飯店放棉被</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">車程約 20 分鐘</div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-emerald-400 bg-emerald-400"></div>
-      <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-3.5">
-        <div class="text-[11px] font-bold text-emerald-500 tracking-wide">13:00</div>
-        <div class="text-[13px] font-bold mt-0.5 text-emerald-700">松島灣纜車站</div>
-        <div class="text-[11px] text-emerald-500 mt-0.5">KKday 換票入場</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-emerald-500 text-white px-2.5 py-0.5 rounded-full">已訂票</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/송도해상케이블카+부산" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <a href="https://m.uber.com/ul/?action=setPickup&dropoff[formatted_address]=송도해상케이블카&dropoff[latitude]=35.0685&dropoff[longitude]=129.0170" target="_blank" class="action-btn uber"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-7v4h4l-5 7z"/></svg>Uber</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">부산 송도 해상케이블카</div>
-          <div class="kr-addr">부산광역시 서구 송도해변로 171 (암남동)</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-emerald-400 bg-emerald-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-emerald-500 tracking-wide">13:30</div>
-        <div class="text-[13px] font-semibold mt-0.5">岩南公園</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">停留約 1 小時</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-emerald-50 text-emerald-600 px-2.5 py-0.5 rounded-full">景點</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/암남공원+부산" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-rose-400 bg-rose-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-rose-400 tracking-wide">14:30</div>
-        <div class="text-[13px] font-semibold mt-0.5">濟州家海鮮粥（南浦站本店）</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-rose-50 text-rose-500 px-2.5 py-0.5 rounded-full">美食</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/제주가해물죽+남포역본점+부산" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <a href="https://m.uber.com/ul/?action=setPickup&dropoff[formatted_address]=제주가해물죽+남포역본점&dropoff[latitude]=35.0975&dropoff[longitude]=129.0310" target="_blank" class="action-btn uber"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-7v4h4l-5 7z"/></svg>Uber</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">제주가해물죽 남포역본점</div>
-          <div class="kr-addr">부산광역시 중구 남포동2가 22-1</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-amber-400 bg-amber-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-amber-500 tracking-wide">15:30</div>
-        <div class="text-[13px] font-semibold mt-0.5">逛大創</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-amber-50 text-amber-600 px-2.5 py-0.5 rounded-full">購物</span>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-slate-300 bg-slate-300"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-slate-400 tracking-wide">17:30</div>
-        <div class="text-[13px] font-semibold mt-0.5">回飯店放東西</div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-amber-400 bg-amber-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-amber-500 tracking-wide">傍晚</div>
-        <div class="text-[13px] font-semibold mt-0.5">BIFF 廣場</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">逛逛 + 買隔天早餐</div>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/BIFF광장+부산" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-rose-400 bg-rose-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-rose-400 tracking-wide">晚餐</div>
-        <div class="text-[13px] font-semibold mt-0.5">元祖糖餅</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-rose-50 text-rose-500 px-2.5 py-0.5 rounded-full">美食</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/원조씨앗호떡+부산+BIFF" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="mt-5 bg-violet-50 border border-violet-100 rounded-2xl px-4 py-3 flex items-center gap-3">
-    <svg class="w-5 h-5 text-violet-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21V7a2 2 0 012-2h6a2 2 0 012 2v14M21 21V11a2 2 0 00-2-2h-4a2 2 0 00-2 2v10"/></svg>
-    <span class="text-[12px] font-semibold text-violet-700">今晚住宿：Paramion 飯店</span>
-  </div>
-</div>
-
-<!-- ===== DAY 3 ===== -->
-<div class="day-panel px-4 pt-5 pb-24 max-w-lg mx-auto" id="day3">
-  <div class="bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl p-4 mb-5 text-white shadow-lg shadow-amber-200">
-    <div class="text-[11px] font-medium text-amber-100 tracking-wider uppercase">Day 3 &middot; Thursday</div>
-    <h2 class="font-heading text-lg font-bold mt-1">海雲台 &middot; 灌籃高手平交道</h2>
-    <p class="text-amber-100 text-[12px] mt-1">藍線公園、SEALIFE、鹽烤肉、傳統市場</p>
-  </div>
-  <div class="relative pl-6 border-l-2 border-slate-200 space-y-4 ml-1.5">
-
-    <div class="relative card-hover"><div class="timeline-dot text-rose-400 bg-rose-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-rose-400 tracking-wide">10:00</div>
-        <div class="text-[13px] font-semibold mt-0.5">民宿早餐（麵包）</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">退房離開 Paramion</div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-slate-300 bg-slate-300"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-slate-400 tracking-wide">11:00</div>
-        <div class="text-[13px] font-semibold mt-0.5">前往海雲台民宿</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">Airbnb 寄放行李</div>
-        <div class="action-row">
-          <a href="https://m.uber.com/ul/?action=setPickup&dropoff[formatted_address]=해운대+민숙&dropoff[latitude]=35.1590&dropoff[longitude]=129.1600" target="_blank" class="action-btn uber"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-7v4h4l-5 7z"/></svg>Uber</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-rose-400 bg-rose-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-rose-400 tracking-wide">11:30</div>
-        <div class="text-[13px] font-semibold mt-0.5">自然島鹽麵包</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-rose-50 text-rose-500 px-2.5 py-0.5 rounded-full">美食</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/자연도소금빵+해운대" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">자연도소금빵 해운대점</div>
-          <div class="kr-addr">부산광역시 해운대구 해운대해변로298번길</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-emerald-400 bg-emerald-400"></div>
-      <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-3.5">
-        <div class="text-[11px] font-bold text-emerald-500 tracking-wide">12:00</div>
-        <div class="text-[13px] font-bold mt-0.5 text-emerald-700">海雲台藍線公園（尾浦站）</div>
-        <div class="text-[11px] text-emerald-500 mt-0.5">搭到青沙浦站下車</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-emerald-500 text-white px-2.5 py-0.5 rounded-full">已訂票</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/해운대블루라인파크+미포정거장" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <a href="https://m.uber.com/ul/?action=setPickup&dropoff[formatted_address]=해운대블루라인파크+미포정거장&dropoff[latitude]=35.1623&dropoff[longitude]=129.1710" target="_blank" class="action-btn uber"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-7v4h4l-5 7z"/></svg>Uber</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">해운대블루라인파크 미포정거장</div>
-          <div class="kr-addr">부산광역시 해운대구 달맞이길 62번길</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-emerald-400 bg-emerald-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm border-l-4 border-amber-400">
-        <div class="text-[11px] font-bold text-emerald-500 tracking-wide">13:00</div>
-        <div class="text-[13px] font-bold mt-0.5">灌籃高手平交道</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">經典打卡點!</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-emerald-50 text-emerald-600 px-2.5 py-0.5 rounded-full">景點</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/청사포+슬램덩크+건널목+부산" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-rose-400 bg-rose-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-rose-400 tracking-wide">13:20</div>
-        <div class="text-[13px] font-semibold mt-0.5">&#xC870;&#xAC1C;&#xBDF0; 海雲台本店（烤扇貝）</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-rose-50 text-rose-500 px-2.5 py-0.5 rounded-full">美食</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/조개뷰+해운대본점" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">조개뷰 해운대본점</div>
-          <div class="kr-addr">부산광역시 해운대구 중동1로</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-emerald-400 bg-emerald-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-emerald-500 tracking-wide">14:00</div>
-        <div class="text-[13px] font-semibold mt-0.5">天空步道</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-emerald-50 text-emerald-600 px-2.5 py-0.5 rounded-full">景點</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/청사포+다릿돌전망대" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-emerald-400 bg-emerald-400"></div>
-      <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-3.5">
-        <div class="text-[11px] font-bold text-emerald-500 tracking-wide">15:00 - 17:00</div>
-        <div class="text-[13px] font-bold mt-0.5 text-emerald-700">SEALIFE 水族館</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-emerald-500 text-white px-2.5 py-0.5 rounded-full">已訂票</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/씨라이프+부산아쿠아리움" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <a href="https://m.uber.com/ul/?action=setPickup&dropoff[formatted_address]=씨라이프+부산아쿠아리움&dropoff[latitude]=35.1588&dropoff[longitude]=129.1605" target="_blank" class="action-btn uber"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-7v4h4l-5 7z"/></svg>Uber</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-rose-400 bg-rose-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-rose-400 tracking-wide">17:00 - 18:30</div>
-        <div class="text-[13px] font-semibold mt-0.5">味贊王鹽烤肉（海雲台店）</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-rose-50 text-rose-500 px-2.5 py-0.5 rounded-full">美食</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/미창왕소금구이+해운대점" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <a href="https://m.uber.com/ul/?action=setPickup&dropoff[formatted_address]=미창왕소금구이+해운대점&dropoff[latitude]=35.1592&dropoff[longitude]=129.1580" target="_blank" class="action-btn uber"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-7v4h4l-5 7z"/></svg>Uber</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">미창왕소금구이 해운대점</div>
-          <div class="kr-addr">부산광역시 해운대구 구남로</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-amber-400 bg-amber-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-amber-500 tracking-wide">晚間</div>
-        <div class="text-[13px] font-semibold mt-0.5">逛街散步</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">Olive Young、大創（買玩沙玩具）、買麵包</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-amber-50 text-amber-600 px-2.5 py-0.5 rounded-full">購物</span>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-amber-400 bg-amber-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-amber-500 tracking-wide">—</div>
-        <div class="text-[13px] font-semibold mt-0.5">海雲台傳統市場</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-amber-50 text-amber-600 px-2.5 py-0.5 rounded-full">逛街</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/해운대전통시장" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="mt-5 bg-violet-50 border border-violet-100 rounded-2xl px-4 py-3 flex items-center gap-3">
-    <svg class="w-5 h-5 text-violet-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21V7a2 2 0 012-2h6a2 2 0 012 2v14M21 21V11a2 2 0 00-2-2h-4a2 2 0 00-2 2v10"/></svg>
-    <span class="text-[12px] font-semibold text-violet-700">今晚住宿：海雲台民宿（Airbnb）</span>
-  </div>
-</div>
-
-<!-- ===== DAY 4 ===== -->
-<div class="day-panel px-4 pt-5 pb-24 max-w-lg mx-auto" id="day4">
-  <div class="bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl p-4 mb-5 text-white shadow-lg shadow-rose-200">
-    <div class="text-[11px] font-medium text-rose-200 tracking-wider uppercase">Day 4 &middot; Friday</div>
-    <h2 class="font-heading text-lg font-bold mt-1">海雲台玩樂日</h2>
-    <p class="text-rose-200 text-[12px] mt-1">Luge、樂天世界、生醃螃蟹、炸雞</p>
-  </div>
-  <div class="relative pl-6 border-l-2 border-slate-200 space-y-4 ml-1.5">
-
-    <div class="relative card-hover"><div class="timeline-dot text-rose-400 bg-rose-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-rose-400 tracking-wide">10:00</div>
-        <div class="text-[13px] font-semibold mt-0.5">民宿早餐</div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-amber-400 bg-amber-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-amber-500 tracking-wide">10:00 - 11:00</div>
-        <div class="text-[13px] font-semibold mt-0.5">媽媽逛 Olive Young</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">小朋友玩沙沙 + 購物袋</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-amber-50 text-amber-600 px-2.5 py-0.5 rounded-full">購物</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/올리브영+해운대" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-slate-300 bg-slate-300"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-slate-400 tracking-wide">11:10 - 12:00</div>
-        <div class="text-[13px] font-semibold mt-0.5">回民宿放東西、換衣服</div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-rose-400 bg-rose-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-rose-400 tracking-wide">12:30 - 13:30</div>
-        <div class="text-[13px] font-semibold mt-0.5">Mipo-jib 生醃螃蟹</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">海雲台本店</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-rose-50 text-rose-500 px-2.5 py-0.5 rounded-full">美食</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/미포집+해운대본점" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">미포집 해운대본점</div>
-          <div class="kr-addr">부산광역시 해운대구 달맞이길</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-emerald-400 bg-emerald-400"></div>
-      <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-3.5">
-        <div class="text-[11px] font-bold text-emerald-500 tracking-wide">14:00 - 16:00</div>
-        <div class="text-[13px] font-bold mt-0.5 text-emerald-700">Skyline Luge Busan</div>
-        <div class="text-[11px] text-emerald-500 mt-0.5">超好玩斜坡滑車!</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-emerald-500 text-white px-2.5 py-0.5 rounded-full">已訂票</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/스카이라인+루지+부산" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <a href="https://m.uber.com/ul/?action=setPickup&dropoff[formatted_address]=스카이라인+루지+부산&dropoff[latitude]=35.1860&dropoff[longitude]=129.2150" target="_blank" class="action-btn uber"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-7v4h4l-5 7z"/></svg>Uber</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">스카이라인 루지 부산</div>
-          <div class="kr-addr">부산광역시 기장군 기장읍 기장해안로 205</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-emerald-400 bg-emerald-400"></div>
-      <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-3.5">
-        <div class="text-[11px] font-bold text-emerald-500 tracking-wide">16:30 起</div>
-        <div class="text-[13px] font-bold mt-0.5 text-emerald-700">釜山樂天世界冒險樂園</div>
-        <div class="text-[11px] text-emerald-500 mt-0.5">順便逛樂天超市大買特買</div>
-        <div class="flex gap-1.5 mt-1.5">
-          <span class="text-[10px] font-semibold bg-emerald-500 text-white px-2.5 py-0.5 rounded-full">已訂票</span>
-          <span class="text-[10px] font-semibold bg-amber-50 text-amber-600 px-2.5 py-0.5 rounded-full">購物</span>
-        </div>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/롯데월드+어드벤처+부산" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <a href="https://m.uber.com/ul/?action=setPickup&dropoff[formatted_address]=롯데월드+어드벤처+부산&dropoff[latitude]=35.1960&dropoff[longitude]=129.2130" target="_blank" class="action-btn uber"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-7v4h4l-5 7z"/></svg>Uber</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">롯데월드 어드벤처 부산</div>
-          <div class="kr-addr">부산광역시 기장군 기장읍 동부산관광로 42</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-rose-400 bg-rose-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-rose-400 tracking-wide">晚餐</div>
-        <div class="text-[13px] font-semibold mt-0.5">Puradak 炸雞</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-rose-50 text-rose-500 px-2.5 py-0.5 rounded-full">美食</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/푸라닭+치킨+해운대" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-rose-400 bg-rose-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-rose-400 tracking-wide">—</div>
-        <div class="text-[13px] font-semibold mt-0.5">Jinwoorin Haejang 韓牛料理</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-rose-50 text-rose-500 px-2.5 py-0.5 rounded-full">美食</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/진우린해장+부산+해운대" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">진우린해장</div>
-          <div class="kr-addr">부산광역시 해운대구 구남로</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-amber-400 bg-amber-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-amber-500 tracking-wide">—</div>
-        <div class="text-[13px] font-semibold mt-0.5">海雲台傳統市場</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-amber-50 text-amber-600 px-2.5 py-0.5 rounded-full">逛街</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/해운대전통시장" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="mt-5 bg-violet-50 border border-violet-100 rounded-2xl px-4 py-3 flex items-center gap-3">
-    <svg class="w-5 h-5 text-violet-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21V7a2 2 0 012-2h6a2 2 0 012 2v14M21 21V11a2 2 0 00-2-2h-4a2 2 0 00-2 2v10"/></svg>
-    <span class="text-[12px] font-semibold text-violet-700">今晚住宿：海雲台民宿（Airbnb）</span>
-  </div>
-</div>
-
-<!-- ===== DAY 5 ===== -->
-<div class="day-panel px-4 pt-5 pb-24 max-w-lg mx-auto" id="day5">
-  <div class="bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-4 mb-5 text-white shadow-lg shadow-violet-200">
-    <div class="text-[11px] font-medium text-violet-200 tracking-wider uppercase">Day 5 &middot; Saturday</div>
-    <h2 class="font-heading text-lg font-bold mt-1">回程日 — 釜山 → 桃園</h2>
-    <p class="text-violet-200 text-[12px] mt-1">最後巡禮、ARTE MUSEUM、晚班機回台</p>
-  </div>
-  <div class="relative pl-6 border-l-2 border-slate-200 space-y-4 ml-1.5">
-
-    <div class="relative card-hover"><div class="timeline-dot text-rose-400 bg-rose-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-rose-400 tracking-wide">09:30</div>
-        <div class="text-[13px] font-semibold mt-0.5">海雲台民宿早餐</div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-rose-400 bg-rose-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-rose-400 tracking-wide">—</div>
-        <div class="text-[13px] font-semibold mt-0.5">海雲台道地蔘雞湯</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-rose-50 text-rose-500 px-2.5 py-0.5 rounded-full">美食</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/도지삼계탕+해운대+부산" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">해운대 삼계탕</div>
-          <div class="kr-addr">부산광역시 해운대구 해운대해변로</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-amber-400 bg-amber-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-amber-500 tracking-wide">10:00 - 11:00</div>
-        <div class="text-[13px] font-semibold mt-0.5">媽媽逛 Olive Young</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">小朋友玩沙沙</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-amber-50 text-amber-600 px-2.5 py-0.5 rounded-full">購物</span>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-slate-300 bg-slate-300"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-slate-400 tracking-wide">11:10 - 12:00</div>
-        <div class="text-[13px] font-semibold mt-0.5">回民宿放東西、換衣服</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">12 點前退房 + 寄放行李</div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-emerald-400 bg-emerald-400"></div>
-      <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-3.5">
-        <div class="text-[11px] font-bold text-emerald-500 tracking-wide">12:30 - 13:30</div>
-        <div class="text-[13px] font-bold mt-0.5 text-emerald-700">釜山 X the SKY</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-emerald-500 text-white px-2.5 py-0.5 rounded-full">已訂票</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/부산엑스더스카이" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <a href="https://m.uber.com/ul/?action=setPickup&dropoff[formatted_address]=부산엑스더스카이&dropoff[latitude]=35.1622&dropoff[longitude]=129.1680" target="_blank" class="action-btn uber"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-7v4h4l-5 7z"/></svg>Uber</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">부산엑스더스카이</div>
-          <div class="kr-addr">부산광역시 해운대구 달맞이길 30 엘시티 랜드마크타워 98-100층</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-rose-400 bg-rose-400"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-rose-400 tracking-wide">14:30</div>
-        <div class="text-[13px] font-semibold mt-0.5">水邊最高豬肉湯飯</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-rose-50 text-rose-500 px-2.5 py-0.5 rounded-full">美食</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/물가에최고돼지국밥+부산" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">물가에최고돼지국밥</div>
-          <div class="kr-addr">부산광역시 해운대구</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-slate-300 bg-slate-300"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-slate-400 tracking-wide">—</div>
-        <div class="text-[13px] font-semibold mt-0.5">拿行李</div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-emerald-400 bg-emerald-400"></div>
-      <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-3.5">
-        <div class="text-[11px] font-bold text-emerald-500 tracking-wide">15:30 - 17:00</div>
-        <div class="text-[13px] font-bold mt-0.5 text-emerald-700">ARTE MUSEUM</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-emerald-500 text-white px-2.5 py-0.5 rounded-full">已訂票</span>
-        <div class="action-row">
-          <a href="https://www.google.com/maps/search/아르떼뮤지엄+부산" target="_blank" class="action-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>
-          <a href="https://m.uber.com/ul/?action=setPickup&dropoff[formatted_address]=아르떼뮤지엄+부산&dropoff[latitude]=35.1958&dropoff[longitude]=129.2128" target="_blank" class="action-btn uber"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-7v4h4l-5 7z"/></svg>Uber</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">아르떼뮤지엄 부산</div>
-          <div class="kr-addr">부산광역시 기장군 기장읍 동부산관광로 42 (동부산 롯데몰 내)</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-brand-500 bg-brand-500"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-brand-500 tracking-wide">18:00</div>
-        <div class="text-[13px] font-semibold mt-0.5">抵達金海機場</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">報到、安檢、免稅店</div>
-        <div class="action-row">
-          <a href="https://m.uber.com/ul/?action=setPickup&dropoff[formatted_address]=김해국제공항&dropoff[latitude]=35.1795&dropoff[longitude]=128.9382" target="_blank" class="action-btn uber"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-7v4h4l-5 7z"/></svg>Uber</a>
-          <button onclick="toggleKr(this)" class="action-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>
-        </div>
-        <div class="kr-popup">
-          <div class="kr-name">김해국제공항</div>
-          <div class="kr-addr">부산광역시 강서구 공항진입로 108</div>
-          <div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-brand-500 bg-brand-500"></div>
-      <div class="bg-gradient-to-br from-brand-50 to-brand-100 border border-brand-200 rounded-2xl p-3.5">
-        <div class="text-[11px] font-bold text-brand-600 tracking-wide">20:40</div>
-        <div class="text-[13px] font-bold mt-0.5 text-brand-700">
-          <svg class="w-4 h-4 inline mr-1 -mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>虎航 IT211 起飛
-        </div>
-        <div class="text-[11px] text-brand-500 mt-0.5">金海 → 桃園機場</div>
-        <span class="inline-block mt-1.5 text-[10px] font-semibold bg-brand-500 text-white px-2.5 py-0.5 rounded-full">航班</span>
-      </div>
-    </div>
-
-    <div class="relative card-hover"><div class="timeline-dot text-brand-500 bg-brand-500"></div>
-      <div class="bg-white rounded-2xl p-3.5 shadow-sm">
-        <div class="text-[11px] font-bold text-brand-500 tracking-wide">22:10</div>
-        <div class="text-[13px] font-semibold mt-0.5">抵達桃園機場</div>
-        <div class="text-[11px] text-slate-400 mt-0.5">回家！辛苦了</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ===== TOOLS ===== -->
-<div class="day-panel px-4 pt-5 pb-24 max-w-lg mx-auto" id="tools">
-
-  <!-- Currency Converter -->
-  <div class="bg-white rounded-2xl p-4 mb-4 shadow-sm">
-    <h3 class="text-[13px] font-bold text-slate-700 mb-3 flex items-center gap-2">
-      <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      匯率換算
-    </h3>
-    <div class="flex items-center gap-3 mb-3">
-      <div class="flex-1">
-        <label class="text-[10px] text-slate-400 font-semibold block mb-1">TWD 台幣</label>
-        <input id="twd-input" type="number" inputmode="decimal" placeholder="100" value="100" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-[14px] font-semibold text-slate-700 focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-200">
-      </div>
-      <div class="flex flex-col items-center pt-4">
-        <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-      </div>
-      <div class="flex-1">
-        <label class="text-[10px] text-slate-400 font-semibold block mb-1">KRW 韓元</label>
-        <input id="krw-input" type="number" inputmode="decimal" placeholder="4500" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-[14px] font-semibold text-slate-700 focus:outline-none focus:border-brand-400 focus:ring-1 focus:ring-brand-200">
-      </div>
-    </div>
-    <div class="text-[11px] text-slate-400 text-center" id="rate-display">匯率：1 TWD ≈ 45 KRW（參考值）</div>
-    <div class="grid grid-cols-4 gap-2 mt-3">
-      <button onclick="quickConvert(100)" class="bg-brand-50 text-brand-600 text-[11px] font-semibold py-1.5 rounded-lg cursor-pointer">$100</button>
-      <button onclick="quickConvert(500)" class="bg-brand-50 text-brand-600 text-[11px] font-semibold py-1.5 rounded-lg cursor-pointer">$500</button>
-      <button onclick="quickConvert(1000)" class="bg-brand-50 text-brand-600 text-[11px] font-semibold py-1.5 rounded-lg cursor-pointer">$1,000</button>
-      <button onclick="quickConvert(5000)" class="bg-brand-50 text-brand-600 text-[11px] font-semibold py-1.5 rounded-lg cursor-pointer">$5,000</button>
-    </div>
-  </div>
-
-  <!-- Weather -->
-  <div class="bg-white rounded-2xl p-4 mb-4 shadow-sm">
-    <h3 class="text-[13px] font-bold text-slate-700 mb-3 flex items-center gap-2">
-      <svg class="w-4 h-4 text-sky-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
-      釜山天氣預報
-    </h3>
-    <div id="weather-grid" class="grid grid-cols-5 gap-2 text-center">
-      <div class="bg-sky-50 rounded-xl p-2"><div class="text-[10px] text-slate-400">5/12</div><div class="text-lg my-0.5" id="w-icon-0">--</div><div class="text-[12px] font-bold text-slate-700" id="w-temp-0">--</div><div class="text-[9px] text-slate-400" id="w-desc-0">載入中</div></div>
-      <div class="bg-sky-50 rounded-xl p-2"><div class="text-[10px] text-slate-400">5/13</div><div class="text-lg my-0.5" id="w-icon-1">--</div><div class="text-[12px] font-bold text-slate-700" id="w-temp-1">--</div><div class="text-[9px] text-slate-400" id="w-desc-1">載入中</div></div>
-      <div class="bg-sky-50 rounded-xl p-2"><div class="text-[10px] text-slate-400">5/14</div><div class="text-lg my-0.5" id="w-icon-2">--</div><div class="text-[12px] font-bold text-slate-700" id="w-temp-2">--</div><div class="text-[9px] text-slate-400" id="w-desc-2">載入中</div></div>
-      <div class="bg-sky-50 rounded-xl p-2"><div class="text-[10px] text-slate-400">5/15</div><div class="text-lg my-0.5" id="w-icon-3">--</div><div class="text-[12px] font-bold text-slate-700" id="w-temp-3">--</div><div class="text-[9px] text-slate-400" id="w-desc-3">載入中</div></div>
-      <div class="bg-sky-50 rounded-xl p-2"><div class="text-[10px] text-slate-400">5/16</div><div class="text-lg my-0.5" id="w-icon-4">--</div><div class="text-[12px] font-bold text-slate-700" id="w-temp-4">--</div><div class="text-[9px] text-slate-400" id="w-desc-4">載入中</div></div>
-    </div>
-    <div class="text-[10px] text-slate-300 text-center mt-2">資料來源：Open-Meteo（出發前會自動更新）</div>
-  </div>
-
-  <!-- Emergency Info -->
-  <div class="bg-red-50 border border-red-200 rounded-2xl p-4 mb-4">
-    <h3 class="text-[13px] font-bold text-red-700 mb-3 flex items-center gap-2">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-      緊急資訊
-    </h3>
-    <div class="space-y-2 text-[12px]">
-      <div class="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5">
-        <span class="text-red-500 font-bold w-16 flex-shrink-0">報警</span>
-        <a href="tel:112" class="text-brand-600 font-semibold">112</a>
-      </div>
-      <div class="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5">
-        <span class="text-red-500 font-bold w-16 flex-shrink-0">急救</span>
-        <a href="tel:119" class="text-brand-600 font-semibold">119</a>
-      </div>
-      <div class="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5">
-        <span class="text-red-500 font-bold w-16 flex-shrink-0">觀光警察</span>
-        <a href="tel:1330" class="text-brand-600 font-semibold">1330</a>
-        <span class="text-slate-400 text-[10px]">（有中文服務）</span>
-      </div>
-      <div class="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5">
-        <span class="text-red-500 font-bold w-16 flex-shrink-0">駐韓辦事處</span>
-        <a href="tel:+82-2-6329-6000" class="text-brand-600 font-semibold text-[11px]">+82-2-6329-6000</a>
-      </div>
-      <div class="flex items-center gap-3 bg-white rounded-xl px-3 py-2.5">
-        <span class="text-red-500 font-bold w-16 flex-shrink-0">急難救助</span>
-        <a href="tel:+82-10-9080-2761" class="text-brand-600 font-semibold text-[11px]">+82-10-9080-2761</a>
-        <span class="text-slate-400 text-[10px]">（駐韓代表處急難手機）</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Korean Phrases -->
-  <div class="bg-white rounded-2xl p-4 mb-4 shadow-sm">
-    <h3 class="text-[13px] font-bold text-slate-700 mb-3 flex items-center gap-2">
-      <svg class="w-4 h-4 text-violet-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
-      常用韓語
-    </h3>
-    <div class="space-y-1.5" id="phrases-list">
-      <!-- Greetings -->
-      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2 mb-1">打招呼</div>
-      <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5 cursor-pointer" onclick="speakKr('안녕하세요')">
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">你好</div><div class="font-kr text-[14px] font-bold text-violet-700">안녕하세요</div><div class="text-[10px] text-slate-400">an-nyeong-ha-se-yo</div></div>
-        <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>
-      </div>
-      <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5 cursor-pointer" onclick="speakKr('감사합니다')">
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">謝謝</div><div class="font-kr text-[14px] font-bold text-violet-700">감사합니다</div><div class="text-[10px] text-slate-400">gam-sa-ham-ni-da</div></div>
-        <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>
-      </div>
-      <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5 cursor-pointer" onclick="speakKr('죄송합니다')">
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">對不起 / 不好意思</div><div class="font-kr text-[14px] font-bold text-violet-700">죄송합니다</div><div class="text-[10px] text-slate-400">joe-song-ham-ni-da</div></div>
-        <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>
-      </div>
-
-      <!-- Restaurant -->
-      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-3 mb-1">餐廳點餐</div>
-      <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5 cursor-pointer" onclick="speakKr('이거 주세요')">
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">請給我這個</div><div class="font-kr text-[14px] font-bold text-violet-700">이거 주세요</div><div class="text-[10px] text-slate-400">i-geo ju-se-yo</div></div>
-        <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>
-      </div>
-      <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5 cursor-pointer" onclick="speakKr('메뉴판 주세요')">
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">請給我菜單</div><div class="font-kr text-[14px] font-bold text-violet-700">메뉴판 주세요</div><div class="text-[10px] text-slate-400">me-nyu-pan ju-se-yo</div></div>
-        <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>
-      </div>
-      <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5 cursor-pointer" onclick="speakKr('계산해 주세요')">
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">請結帳</div><div class="font-kr text-[14px] font-bold text-violet-700">계산해 주세요</div><div class="text-[10px] text-slate-400">gye-san-hae ju-se-yo</div></div>
-        <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>
-      </div>
-      <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5 cursor-pointer" onclick="speakKr('물 좀 주세요')">
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">請給我水</div><div class="font-kr text-[14px] font-bold text-violet-700">물 좀 주세요</div><div class="text-[10px] text-slate-400">mul jom ju-se-yo</div></div>
-        <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>
-      </div>
-      <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5 cursor-pointer" onclick="speakKr('맛있어요')">
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">很好吃!</div><div class="font-kr text-[14px] font-bold text-violet-700">맛있어요!</div><div class="text-[10px] text-slate-400">ma-si-sseo-yo</div></div>
-        <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>
-      </div>
-
-      <!-- Transport -->
-      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-3 mb-1">交通 / 計程車</div>
-      <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5 cursor-pointer" onclick="speakKr('여기로 가 주세요')">
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">請到這裡（指地圖/螢幕）</div><div class="font-kr text-[14px] font-bold text-violet-700">여기로 가 주세요</div><div class="text-[10px] text-slate-400">yeo-gi-ro ga ju-se-yo</div></div>
-        <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>
-      </div>
-      <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5 cursor-pointer" onclick="speakKr('여기서 내려 주세요')">
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">請在這裡讓我下車</div><div class="font-kr text-[14px] font-bold text-violet-700">여기서 내려 주세요</div><div class="text-[10px] text-slate-400">yeo-gi-seo nae-ryeo ju-se-yo</div></div>
-        <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>
-      </div>
-      <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5 cursor-pointer" onclick="speakKr('얼마예요')">
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">多少錢？</div><div class="font-kr text-[14px] font-bold text-violet-700">얼마예요?</div><div class="text-[10px] text-slate-400">eol-ma-ye-yo</div></div>
-        <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>
-      </div>
-      <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5 cursor-pointer" onclick="speakKr('카드 돼요?')">
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">可以刷卡嗎？</div><div class="font-kr text-[14px] font-bold text-violet-700">카드 돼요?</div><div class="text-[10px] text-slate-400">ka-deu dwae-yo</div></div>
-        <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>
-      </div>
-
-      <!-- Shopping -->
-      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-3 mb-1">購物</div>
-      <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5 cursor-pointer" onclick="speakKr('좀 깎아 주세요')">
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">可以算便宜一點嗎？</div><div class="font-kr text-[14px] font-bold text-violet-700">좀 깎아 주세요</div><div class="text-[10px] text-slate-400">jom kka-kka ju-se-yo</div></div>
-        <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>
-      </div>
-      <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5 cursor-pointer" onclick="speakKr('면세 되나요')">
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">可以免稅嗎？</div><div class="font-kr text-[14px] font-bold text-violet-700">면세 되나요?</div><div class="text-[10px] text-slate-400">myeon-se doe-na-yo</div></div>
-        <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>
-      </div>
-
-      <!-- Help -->
-      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-3 mb-1">求助</div>
-      <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5 cursor-pointer" onclick="speakKr('화장실 어디예요')">
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">廁所在哪裡？</div><div class="font-kr text-[14px] font-bold text-violet-700">화장실 어디예요?</div><div class="text-[10px] text-slate-400">hwa-jang-sil eo-di-ye-yo</div></div>
-        <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>
-      </div>
-      <div class="phrase-card flex items-center gap-3 bg-violet-50 rounded-xl px-3 py-2.5 cursor-pointer" onclick="speakKr('도와주세요')">
-        <div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">請幫幫我</div><div class="font-kr text-[14px] font-bold text-violet-700">도와주세요</div><div class="text-[10px] text-slate-400">do-wa-ju-se-yo</div></div>
-        <svg class="w-5 h-5 text-violet-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clip-rule="evenodd"/></svg>
-      </div>
-    </div>
-    <div class="text-[10px] text-slate-300 text-center mt-3">點擊卡片可播放韓語發音</div>
-  </div>
-
-  <!-- Packing Checklist -->
-  <div class="bg-white rounded-2xl p-4 mb-4 shadow-sm">
-    <h3 class="text-[13px] font-bold text-slate-700 mb-3 flex items-center gap-2">
-      <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-      行李打包清單
-      <span id="pack-progress" class="ml-auto text-[10px] font-semibold text-slate-400">0/20</span>
-    </h3>
-    <div id="packing-list" class="space-y-1">
-    </div>
-    <button onclick="resetPacking()" class="mt-3 text-[10px] text-slate-400 underline cursor-pointer">重置清單</button>
-  </div>
-
-  <!-- Expense Tracker -->
-  <div class="bg-white rounded-2xl p-4 shadow-sm">
-    <h3 class="text-[13px] font-bold text-slate-700 mb-3 flex items-center gap-2">
-      <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-      旅行花費記帳
-    </h3>
-    <div class="grid grid-cols-2 gap-3 mb-3">
-      <div class="bg-emerald-50 rounded-xl p-3 text-center">
-        <div class="text-[10px] text-emerald-600 font-semibold">總花費（KRW）</div>
-        <div class="font-heading text-lg font-extrabold text-emerald-700" id="total-krw">0</div>
-      </div>
-      <div class="bg-brand-50 rounded-xl p-3 text-center">
-        <div class="text-[10px] text-brand-600 font-semibold">約等於（TWD）</div>
-        <div class="font-heading text-lg font-extrabold text-brand-700" id="total-twd">0</div>
-      </div>
-    </div>
-    <div class="flex gap-2 mb-3">
-      <input id="expense-desc" type="text" placeholder="項目（午餐、門票...）" class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[12px] focus:outline-none focus:border-brand-400">
-      <input id="expense-amount" type="number" inputmode="decimal" placeholder="金額(KRW)" class="w-28 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[12px] focus:outline-none focus:border-brand-400">
-      <button onclick="addExpense()" class="bg-emerald-500 text-white px-3 rounded-xl text-[11px] font-semibold cursor-pointer min-h-[40px]">+</button>
-    </div>
-    <div id="expense-list" class="space-y-1.5 max-h-60 overflow-y-auto">
-      <div class="text-[11px] text-slate-300 text-center py-4">尚未記錄任何花費</div>
-    </div>
-    <button onclick="clearExpenses()" class="mt-3 text-[10px] text-slate-400 underline cursor-pointer">清除所有記錄</button>
-  </div>
-</div>
-
 <script>
-  // Tab switching
-  const tabs = document.querySelectorAll('.tab-pill');
-  const panels = document.querySelectorAll('.day-panel');
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const target = tab.dataset.day;
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      panels.forEach(p => p.classList.remove('active'));
-      document.getElementById(target).classList.add('active');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  });
+// ===== API 設定（部署時改成正式路徑）=====
+const API_BASE = './api'; // e.g. '/busan/api'
+let USE_API = false; // 自動偵測：API 可用就用 API，否則 fallback localStorage
 
-  // Toggle Korean address popup
-  function toggleKr(btn) {
-    const card = btn.closest('[class*="rounded-2xl"]');
-    if (card) {
-      const popup = card.querySelector('.kr-popup');
-      if (popup) popup.classList.toggle('show');
-    }
-  }
+// 偵測 API 是否可用
+fetch(API_BASE + '/itinerary.php', { method: 'GET' })
+  .then(r => { if (r.ok) { USE_API = true; console.log('API mode enabled'); loadFromAPI(); } })
+  .catch(() => { console.log('API not available, using localStorage'); });
 
-  // Copy Korean address
-  function copyKr(el) {
-    const popup = el.closest('.kr-popup');
-    const name = popup.querySelector('.kr-name').textContent;
-    const addr = popup.querySelector('.kr-addr').textContent;
-    const text = name + '\n' + addr;
-    navigator.clipboard.writeText(text).then(() => {
-      el.textContent = '已複製!';
-      setTimeout(() => { el.textContent = '點擊複製韓文地址'; }, 1500);
-    });
-  }
-
-  // ============================
-  // Fix all Map & Uber links
-  // ============================
-  // Google Maps: use directions mode (auto current location as origin)
-  // Uber: add pickup=my_location & properly encode Korean
-  document.addEventListener('DOMContentLoaded', () => {
-    // Fix Google Maps links: search -> dir (navigation with current location)
-    document.querySelectorAll('a.action-btn.map').forEach(a => {
-      const oldUrl = a.getAttribute('href');
-      // Extract the search query from /maps/search/QUERY
-      const match = oldUrl.match(/\/maps\/search\/(.+)$/);
-      if (match) {
-        const query = decodeURIComponent(match[1].replace(/\+/g, ' '));
-        // Use Google Maps directions API with destination as query
-        // origin is blank = use current location
-        const newUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(query);
-        a.setAttribute('href', newUrl);
-      }
-    });
-
-    // Fix Uber links: copy address + open Uber
-    // Uber deep links only work reliably in the mobile app.
-    // On desktop/mobile web, we copy the Korean address first, then open Uber.
-    document.querySelectorAll('a.action-btn.uber').forEach(a => {
-      const oldUrl = a.getAttribute('href');
-      try {
-        const url = new URL(oldUrl);
-        const params = url.searchParams;
-        const card = a.closest('[class*="rounded-2xl"]');
-        const krName = card ? card.querySelector('.kr-name') : null;
-        const krAddr = card ? card.querySelector('.kr-addr') : null;
-        const lat = params.get('dropoff[latitude]');
-        const lng = params.get('dropoff[longitude]');
-        const addr = krAddr ? krAddr.textContent : (params.get('dropoff[formatted_address]') || '');
-        const nickname = krName ? krName.textContent : '';
-
-        // Build properly encoded deep link URL
-        const deepLink = 'https://m.uber.com/ul/?action=setPickup'
-          + '&pickup=my_location'
-          + '&dropoff%5Blatitude%5D=' + (lat || '')
-          + '&dropoff%5Blongitude%5D=' + (lng || '')
-          + '&dropoff%5Bformatted_address%5D=' + encodeURIComponent(addr)
-          + '&dropoff%5Bnickname%5D=' + encodeURIComponent(nickname);
-
-        a.setAttribute('href', deepLink);
-
-        // Intercept click: copy address to clipboard, show toast, then open Uber
-        a.addEventListener('click', (e) => {
-          e.preventDefault();
-          const copyText = (nickname || '') + '\n' + addr;
-          navigator.clipboard.writeText(copyText).then(() => {
-            showToast('已複製地址到剪貼簿，開啟 Uber 後貼上即可');
-            setTimeout(() => { window.open(deepLink, '_blank'); }, 600);
-          }).catch(() => {
-            // If clipboard fails, just open Uber
-            window.open(deepLink, '_blank');
-          });
-        });
-      } catch(e) {}
-    });
-  });
-
-  // Toast notification
-  function showToast(msg) {
-    let toast = document.getElementById('toast');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.id = 'toast';
-      toast.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:12px;font-size:12px;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;text-align:center;max-width:85vw;box-shadow:0 4px 20px rgba(0,0,0,.25)';
-      document.body.appendChild(toast);
-    }
-    toast.textContent = msg;
-    toast.style.opacity = '1';
-    setTimeout(() => { toast.style.opacity = '0'; }, 2500);
-  }
-
-  // ============================
-  // Countdown Timer
-  // ============================
-  function updateCountdown() {
-    const target = new Date('2026-05-12T13:00:00+08:00');
-    const now = new Date();
-    const diff = target - now;
-    const el = document.getElementById('countdown');
-    if (diff <= 0) {
-      // During or after trip
-      const tripEnd = new Date('2026-05-16T22:10:00+08:00');
-      if (now <= tripEnd) {
-        el.textContent = '旅行中！好好享受釜山！';
-      } else {
-        el.textContent = '旅程已結束，期待下次旅行！';
-      }
-      return;
-    }
-    const days = Math.floor(diff / 86400000);
-    const hrs = Math.floor((diff % 86400000) / 3600000);
-    const mins = Math.floor((diff % 3600000) / 60000);
-    el.textContent = '倒數 ' + days + ' 天 ' + hrs + ' 時 ' + mins + ' 分';
-  }
-  updateCountdown();
-  setInterval(updateCountdown, 60000);
-
-  // ============================
-  // Currency Converter
-  // ============================
-  let RATE = 45; // Default fallback rate
-  // Try fetch live rate
-  fetch('https://open.er-api.com/v6/latest/TWD')
-    .then(r => r.json())
-    .then(data => {
-      if (data.rates && data.rates.KRW) {
-        RATE = data.rates.KRW;
-        document.getElementById('rate-display').textContent = '匯率：1 TWD ≈ ' + RATE.toFixed(1) + ' KRW（即時）';
-        // Re-convert if there's a value
-        const twdInput = document.getElementById('twd-input');
-        if (twdInput.value) convertTwd();
-      }
-    })
-    .catch(() => {});
-
-  const twdInput = document.getElementById('twd-input');
-  const krwInput = document.getElementById('krw-input');
-  twdInput.addEventListener('input', convertTwd);
-  krwInput.addEventListener('input', convertKrw);
-
-  function convertTwd() {
-    const v = parseFloat(twdInput.value);
-    if (!isNaN(v)) krwInput.value = Math.round(v * RATE);
-    else krwInput.value = '';
-  }
-  function convertKrw() {
-    const v = parseFloat(krwInput.value);
-    if (!isNaN(v)) twdInput.value = Math.round(v / RATE);
-    else twdInput.value = '';
-  }
-  function quickConvert(twd) {
-    twdInput.value = twd;
-    convertTwd();
-  }
-  // Init
-  convertTwd();
-
-  // ============================
-  // Weather (Open-Meteo, free, no API key)
-  // ============================
-  const weatherIcons = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌧️',55:'🌧️',56:'🌨️',57:'🌨️',61:'🌧️',63:'🌧️',65:'🌧️',66:'🌨️',67:'🌨️',71:'❄️',73:'❄️',75:'❄️',77:'❄️',80:'🌦️',81:'🌧️',82:'🌧️',85:'❄️',86:'❄️',95:'⛈️',96:'⛈️',99:'⛈️'};
-  const weatherDescs = {0:'晴天',1:'大致晴',2:'多雲',3:'陰天',45:'有霧',48:'有霧',51:'小雨',53:'中雨',55:'大雨',61:'小雨',63:'中雨',65:'大雨',80:'陣雨',81:'陣雨',82:'豪雨',95:'雷雨',96:'雷雨'};
-
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=35.1796&longitude=129.0756&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia/Seoul&start_date=2026-05-12&end_date=2026-05-16')
-    .then(r => r.json())
-    .then(data => {
-      if (data.daily) {
-        for (let i = 0; i < 5; i++) {
-          const code = data.daily.weathercode[i];
-          const hi = Math.round(data.daily.temperature_2m_max[i]);
-          const lo = Math.round(data.daily.temperature_2m_min[i]);
-          document.getElementById('w-icon-'+i).textContent = weatherIcons[code] || '🌤️';
-          document.getElementById('w-temp-'+i).textContent = lo + '~' + hi + '°';
-          document.getElementById('w-desc-'+i).textContent = weatherDescs[code] || '—';
-        }
-      }
-    })
-    .catch(() => {
-      for (let i = 0; i < 5; i++) {
-        document.getElementById('w-desc-'+i).textContent = '出發前更新';
-      }
-    });
-
-  // ============================
-  // Korean Speech (Web Speech API)
-  // ============================
-  function speakKr(text) {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'ko-KR';
-      u.rate = 0.85;
-      window.speechSynthesis.speak(u);
-    } else {
-      showToast('你的裝置不支援語音播放');
-    }
-  }
-
-  // ============================
-  // Packing Checklist (localStorage)
-  // ============================
-  const packItems = [
-    {cat:'證件', items:['護照','身分證','電子機票','旅平險保單','KKday 票券截圖']},
-    {cat:'3C', items:['手機充電器','行動電源','韓國轉接頭（圓形雙孔）','耳機']},
-    {cat:'衣物', items:['換洗衣物 x5','外套（早晚涼）','拖鞋']},
-    {cat:'日用品', items:['牙刷牙膏','防曬','雨傘/雨衣','面紙/濕紙巾','塑膠袋']},
-    {cat:'小朋友', items:['玩沙玩具','零食','備用衣物']},
-  ];
-  const PACK_KEY = 'busan-packing';
-
-  function loadPacking() {
-    const saved = JSON.parse(localStorage.getItem(PACK_KEY) || '{}');
-    const container = document.getElementById('packing-list');
-    container.innerHTML = '';
-    let total = 0, checked = 0;
-    packItems.forEach(group => {
-      const header = document.createElement('div');
-      header.className = 'text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2 mb-1';
-      header.textContent = group.cat;
-      container.appendChild(header);
-      group.items.forEach(item => {
-        total++;
-        const isChecked = saved[item] || false;
-        if (isChecked) checked++;
-        const row = document.createElement('label');
-        row.className = 'flex items-center gap-3 bg-slate-50 rounded-xl px-3 py-2.5 cursor-pointer';
-        row.innerHTML = '<input type="checkbox" class="w-4 h-4 accent-emerald-500 rounded" ' + (isChecked ? 'checked' : '') + '><span class="text-[12px] ' + (isChecked ? 'line-through text-slate-300' : 'text-slate-700') + '">' + item + '</span>';
-        row.querySelector('input').addEventListener('change', (e) => {
-          saved[item] = e.target.checked;
-          localStorage.setItem(PACK_KEY, JSON.stringify(saved));
-          loadPacking();
-        });
-        container.appendChild(row);
-      });
-    });
-    document.getElementById('pack-progress').textContent = checked + '/' + total;
-  }
-  function resetPacking() {
-    localStorage.removeItem(PACK_KEY);
-    loadPacking();
-    showToast('清單已重置');
-  }
-  loadPacking();
-
-  // ============================
-  // Expense Tracker (localStorage)
-  // ============================
-  const EXP_KEY = 'busan-expenses';
-
-  function loadExpenses() {
-    const expenses = JSON.parse(localStorage.getItem(EXP_KEY) || '[]');
-    const container = document.getElementById('expense-list');
-    if (expenses.length === 0) {
-      container.innerHTML = '<div class="text-[11px] text-slate-300 text-center py-4">尚未記錄任何花費</div>';
-      document.getElementById('total-krw').textContent = '0';
-      document.getElementById('total-twd').textContent = '0';
-      return;
-    }
-    let totalKrw = 0;
-    container.innerHTML = '';
-    expenses.forEach((exp, idx) => {
-      totalKrw += exp.amount;
-      const row = document.createElement('div');
-      row.className = 'flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-2';
-      row.innerHTML = '<div class="flex-1"><div class="text-[12px] font-semibold text-slate-700">' + exp.desc + '</div><div class="text-[10px] text-slate-400">' + exp.date + '</div></div><div class="text-[12px] font-bold text-emerald-600">₩' + exp.amount.toLocaleString() + '</div><button onclick="removeExpense(' + idx + ')" class="text-slate-300 hover:text-red-400 ml-1 cursor-pointer"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>';
-      container.appendChild(row);
-    });
-    document.getElementById('total-krw').textContent = '₩' + totalKrw.toLocaleString();
-    document.getElementById('total-twd').textContent = '$' + Math.round(totalKrw / RATE).toLocaleString();
-  }
-
-  function addExpense() {
-    const desc = document.getElementById('expense-desc').value.trim();
-    const amount = parseInt(document.getElementById('expense-amount').value);
-    if (!desc || isNaN(amount) || amount <= 0) { showToast('請輸入項目和金額'); return; }
-    const expenses = JSON.parse(localStorage.getItem(EXP_KEY) || '[]');
-    const now = new Date();
-    expenses.push({ desc, amount, date: (now.getMonth()+1) + '/' + now.getDate() + ' ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0') });
-    localStorage.setItem(EXP_KEY, JSON.stringify(expenses));
-    document.getElementById('expense-desc').value = '';
-    document.getElementById('expense-amount').value = '';
-    loadExpenses();
-  }
-
-  function removeExpense(idx) {
-    const expenses = JSON.parse(localStorage.getItem(EXP_KEY) || '[]');
-    expenses.splice(idx, 1);
-    localStorage.setItem(EXP_KEY, JSON.stringify(expenses));
-    loadExpenses();
-  }
-
-  function clearExpenses() {
-    if (confirm('確定要清除所有花費記錄嗎？')) {
-      localStorage.removeItem(EXP_KEY);
+async function loadFromAPI() {
+  // 載入行程（用 API 資料覆蓋本地）— 目前行程用靜態 JS 資料，排序用 API 同步
+  // 載入花費
+  try {
+    const r = await fetch(API_BASE + '/expenses.php');
+    const d = await r.json();
+    if (d.expenses) {
+      localStorage.setItem('busan-expenses', JSON.stringify(
+        d.expenses.map(e => ({ desc: e.desc_text, amount: e.amount, date: e.created_at?.slice(5,16) || '', id: e.id }))
+      ));
       loadExpenses();
-      showToast('記錄已清除');
     }
-  }
-  loadExpenses();
-</script>
+  } catch(e) {}
+  // 載入行李勾選
+  try {
+    const r = await fetch(API_BASE + '/packing.php');
+    const d = await r.json();
+    if (d.packing) {
+      localStorage.setItem('busan-packing', JSON.stringify(d.packing));
+      loadPacking();
+    }
+  } catch(e) {}
+}
 
+// API 同步 helper
+async function apiSync(endpoint, method, body) {
+  if (!USE_API) return;
+  try {
+    await fetch(API_BASE + '/' + endpoint, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch(e) { console.warn('API sync failed:', e); }
+}
+
+// ===== ITINERARY DATA =====
+const DAYS_ORIGINAL = {
+  day1: [
+    { time:'13:00', title:'永和出門', detail:'前往桃園機場', type:'transport' },
+    { time:'14:00', title:'桃園機場第一航廈', detail:'報到、安檢、候機', type:'transport' },
+    { time:'16:40', title:'虎航 IT210 起飛', detail:'桃園 → 金海國際機場', type:'flight' },
+    { time:'19:55', title:'抵達金海國際機場', detail:'入境、提領行李', type:'transport', lat:35.1795, lng:128.9382, mapQuery:'김해국제공항' },
+    { time:'20:55', title:'UBER 前往飯店', detail:'車程約 35 分鐘', type:'transport', lat:35.0982, lng:129.0325, kr:{ name:'파라미온 호텔 부산', addr:'부산광역시 중구 광복로 55 (남포동)' } },
+    { time:'21:30', title:'Paramion 飯店 Check-in', detail:'', type:'hotel', lat:35.0982, lng:129.0325, mapQuery:'파라미온+호텔+부산+남포동' },
+    { time:'晚餐', title:'南浦雪濃湯', detail:'', type:'food', lat:35.0978, lng:129.0305, kr:{ name:'남포설렁탕', addr:'부산광역시 중구 남포동 (광복로 부근)' } }
+  ],
+  day2: [
+    { time:'09:30', title:'Paramion 飯店出發', detail:'', type:'transport' },
+    { time:'12:00', title:'罐頭市場（早午餐）', detail:'順逛國際市場，買棉被', type:'food', lat:35.1003, lng:129.0280, kr:{ name:'통조림시장 / 국제시장', addr:'부산광역시 중구 국제시장2길 25' }, badges:['美食','購物'] },
+    { time:'—', title:'回飯店放棉被', detail:'車程約 20 分鐘', type:'transport' },
+    { time:'13:00', title:'松島灣纜車站', detail:'KKday 換票入場', type:'attraction', ticket:true, lat:35.0685, lng:129.0170, kr:{ name:'부산 송도 해상케이블카', addr:'부산광역시 서구 송도해변로 171' } },
+    { time:'13:30', title:'岩南公園', detail:'停留約 1 小時', type:'attraction', lat:35.0632, lng:129.0130, mapQuery:'암남공원+부산' },
+    { time:'14:00', title:'松島灣纜車回程', detail:'', type:'attraction', ticket:true },
+    { time:'14:30', title:'濟州家海鮮粥（南浦站本店）', detail:'', type:'food', lat:35.0975, lng:129.0310, kr:{ name:'제주가해물죽 남포역본점', addr:'부산광역시 중구 남포동2가' } },
+    { time:'15:30', title:'逛大創', detail:'', type:'shopping' },
+    { time:'17:30', title:'回飯店放東西', detail:'', type:'transport' },
+    { time:'傍晚', title:'BIFF 廣場', detail:'逛逛 + 買隔天早餐', type:'shopping', lat:35.0985, lng:129.0290, mapQuery:'BIFF광장+부산' },
+    { time:'晚餐', title:'元祖糖餅', detail:'', type:'food', lat:35.0984, lng:129.0292, mapQuery:'원조씨앗호떡+부산+BIFF' }
+  ],
+  day3: [
+    { time:'10:00', title:'民宿早餐（麵包）', detail:'退房離開 Paramion', type:'food' },
+    { time:'11:00', title:'前往海雲台民宿', detail:'Airbnb 寄放行李', type:'transport' },
+    { time:'11:30', title:'自然島鹽麵包', detail:'', type:'food', lat:35.1590, lng:129.1600, mapQuery:'자연도소금빵+해운대' },
+    { time:'12:00', title:'海雲台藍線公園（尾浦站）', detail:'搭到青沙浦站下車', type:'attraction', ticket:true, lat:35.1623, lng:129.1710, mapQuery:'해운대블루라인파크+미포정거장' },
+    { time:'13:00', title:'灌籃高手平交道', detail:'經典打卡點!', type:'attraction', lat:35.1610, lng:129.1820, mapQuery:'청사포+슬램덩크+건널목+부산' },
+    { time:'13:20', title:'조개뷰 海雲台本店（烤扇貝）', detail:'', type:'food', lat:35.1590, lng:129.1630, mapQuery:'조개뷰+해운대본점' },
+    { time:'14:00', title:'天空步道', detail:'', type:'attraction', lat:35.1587, lng:129.1870, mapQuery:'청사포+다릿돌전망대' },
+    { time:'15:00-17:00', title:'SEALIFE 水族館', detail:'', type:'attraction', ticket:true, lat:35.1588, lng:129.1605, mapQuery:'씨라이프+부산아쿠아리움' },
+    { time:'17:00-18:30', title:'味贊王鹽烤肉（海雲台店）', detail:'', type:'food', lat:35.1592, lng:129.1580, kr:{ name:'미창왕소금구이 해운대점', addr:'부산광역시 해운대구 구남로' } },
+    { time:'晚間', title:'逛街散步', detail:'Olive Young、大創、海雲台傳統市場', type:'shopping' }
+  ],
+  day4: [
+    { time:'10:00', title:'民宿早餐', detail:'', type:'food' },
+    { time:'10:00-11:00', title:'媽媽逛 Olive Young', detail:'小朋友玩沙沙 + 購物袋', type:'shopping', lat:35.1588, lng:129.1592, mapQuery:'올리브영+해운대' },
+    { time:'11:10-12:00', title:'回民宿放東西、換衣服', detail:'', type:'transport' },
+    { time:'12:30-13:30', title:'Mipo-jib 生醃螃蟹', detail:'海雲台本店', type:'food', lat:35.1615, lng:129.1695, mapQuery:'미포집+해운대본점', kr:{ name:'미포집 해운대본점', addr:'부산광역시 해운대구 달맞이길' } },
+    { time:'14:00-16:00', title:'Skyline Luge Busan', detail:'超好玩斜坡滑車!', type:'attraction', ticket:true, lat:35.1860, lng:129.2150, kr:{ name:'스카이라인 루지 부산', addr:'부산광역시 기장군 기장읍 기장해안로 205' } },
+    { time:'16:30 起', title:'釜山樂天世界冒險樂園', detail:'順便逛樂天超市大買特買', type:'attraction', ticket:true, lat:35.1960, lng:129.2130, mapQuery:'롯데월드+어드벤처+부산', badges:['已訂票','購物'] },
+    { time:'晚餐', title:'Puradak 炸雞', detail:'', type:'food', lat:35.1590, lng:129.1590, mapQuery:'푸라닭+치킨+해운대' },
+    { time:'—', title:'Jinwoorin Haejang 韓牛料理', detail:'', type:'food', lat:35.1595, lng:129.1575, mapQuery:'진우린해장+부산+해운대' },
+    { time:'—', title:'海雲台傳統市場', detail:'', type:'shopping', lat:35.1600, lng:129.1580, mapQuery:'해운대전통시장' }
+  ],
+  day5: [
+    { time:'09:30', title:'海雲台民宿早餐', detail:'', type:'food' },
+    { time:'—', title:'海雲台道地蔘雞湯', detail:'', type:'food', lat:35.1593, lng:129.1595, mapQuery:'도지삼계탕+해운대+부산' },
+    { time:'10:00-11:00', title:'媽媽逛 Olive Young', detail:'小朋友玩沙沙', type:'shopping' },
+    { time:'11:10-12:00', title:'回民宿換衣服', detail:'12 點前退房 + 寄放行李', type:'transport' },
+    { time:'12:30-13:30', title:'釜山 X the SKY', detail:'', type:'attraction', ticket:true, lat:35.1622, lng:129.1680, kr:{ name:'부산엑스더스카이', addr:'부산광역시 해운대구 달맞이길 30 엘시티 98-100층' } },
+    { time:'14:30', title:'水邊最高豬肉湯飯', detail:'', type:'food', lat:35.1590, lng:129.1590, mapQuery:'물가에최고돼지국밥+부산' },
+    { time:'—', title:'拿行李', detail:'', type:'transport' },
+    { time:'15:30-17:00', title:'ARTE MUSEUM', detail:'', type:'attraction', ticket:true, lat:35.1958, lng:129.2128, mapQuery:'아르떼뮤지엄+부산' },
+    { time:'18:00', title:'抵達金海機場', detail:'報到、安檢、免稅店', type:'transport', lat:35.1795, lng:128.9382, kr:{ name:'김해국제공항', addr:'부산광역시 강서구 공항진입로 108' } },
+    { time:'20:40', title:'虎航 IT211 起飛', detail:'金海 → 桃園機場', type:'flight' },
+    { time:'22:10', title:'抵達桃園機場', detail:'回家！辛苦了', type:'transport' }
+  ]
+};
+
+// Deep copy for mutable state
+const DAYS = JSON.parse(JSON.stringify(DAYS_ORIGINAL));
+
+// localStorage keys for custom orders
+const ORDER_KEYS = { day1:'busan-order-day1', day2:'busan-order-day2', day3:'busan-order-day3', day4:'busan-order-day4', day5:'busan-order-day5' };
+
+// Load saved orders from localStorage
+function loadSavedOrder(dayKey) {
+  try {
+    const saved = localStorage.getItem(ORDER_KEYS[dayKey]);
+    if (!saved) return null;
+    return JSON.parse(saved); // array of original indices
+  } catch(e) { return null; }
+}
+
+function saveOrder(dayKey, orderArr) {
+  try { localStorage.setItem(ORDER_KEYS[dayKey], JSON.stringify(orderArr)); } catch(e) {}
+  // Sync to API — send the ID array for the day
+  const dayNum = parseInt(dayKey.replace('day',''));
+  apiSync('itinerary.php', 'PUT', { day: dayNum, order: orderArr });
+}
+
+function resetOrder(dayKey) {
+  localStorage.removeItem(ORDER_KEYS[dayKey]);
+  DAYS[dayKey] = JSON.parse(JSON.stringify(DAYS_ORIGINAL[dayKey]));
+  renderDay(dayKey);
+  showToast('順序已重置');
+}
+
+// ===== TYPE CONFIG =====
+const TYPE_CONFIG = {
+  transport: { dot:'text-slate-300 bg-slate-300', card:'bg-white rounded-xl p-3 shadow-sm', label:'交通', labelClass:'bg-slate-100 text-slate-500' },
+  food:      { dot:'text-rose-400 bg-rose-400',   card:'bg-white rounded-xl p-3 shadow-sm', label:'美食', labelClass:'bg-rose-50 text-rose-500' },
+  attraction:{ dot:'text-emerald-400 bg-emerald-400', card:'bg-white rounded-xl p-3 shadow-sm', label:'景點', labelClass:'bg-emerald-50 text-emerald-600' },
+  shopping:  { dot:'text-amber-400 bg-amber-400', card:'bg-white rounded-xl p-3 shadow-sm', label:'購物', labelClass:'bg-amber-50 text-amber-600' },
+  hotel:     { dot:'text-violet-400 bg-violet-400', card:'bg-violet-50 border border-violet-100 rounded-xl p-3', label:'住宿', labelClass:'bg-violet-100 text-violet-600' },
+  flight:    { dot:'text-brand-500 bg-brand-500', card:'bg-brand-50 border border-brand-200 rounded-xl p-3', label:'航班', labelClass:'bg-brand-500 text-white' }
+};
+
+// ===== RENDER DAY =====
+function renderDay(dayKey) {
+  const container = document.getElementById(dayKey + '-stops');
+  if (!container) return;
+
+  const stops = DAYS[dayKey];
+  const savedOrder = loadSavedOrder(dayKey);
+  let orderedStops;
+  if (savedOrder && savedOrder.length === stops.length) {
+    orderedStops = savedOrder.map(i => ({...stops[i], _origIdx: i}));
+  } else {
+    orderedStops = stops.map((s, i) => ({...s, _origIdx: i}));
+  }
+
+  container.innerHTML = '';
+
+  // Reset order button
+  const resetBtn = document.createElement('button');
+  resetBtn.className = 'reset-order-btn';
+  resetBtn.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>重置順序';
+  resetBtn.onclick = () => resetOrder(dayKey);
+  container.appendChild(resetBtn);
+
+  // Timeline container
+  const timeline = document.createElement('div');
+  timeline.className = 'relative pl-5 border-l-2 border-slate-200 space-y-1 ml-1';
+  timeline.id = dayKey + '-timeline';
+  container.appendChild(timeline);
+
+  orderedStops.forEach((stop, idx) => {
+    // Render card
+    const cardWrapper = renderStopCard(stop, idx, dayKey, orderedStops);
+    timeline.appendChild(cardWrapper);
+
+    // Transit bar between stops with coords
+    if (idx < orderedStops.length - 1) {
+      const nextStop = orderedStops[idx + 1];
+      if (stop.lat && stop.lng && nextStop.lat && nextStop.lng) {
+        const bar = renderTransitBar(stop.lat, stop.lng, nextStop.lat, nextStop.lng);
+        timeline.appendChild(bar);
+      }
+    }
+  });
+
+  // Attach drag listeners
+  attachDragListeners(dayKey);
+}
+
+function renderStopCard(stop, idx, dayKey, orderedStops) {
+  const cfg = TYPE_CONFIG[stop.type] || TYPE_CONFIG.transport;
+  const isTicket = stop.ticket === true;
+  const cardClass = isTicket ? 'bg-emerald-50 border border-emerald-100 rounded-xl p-3' : cfg.card;
+  const dotClass = isTicket ? 'text-emerald-400 bg-emerald-400' : cfg.dot;
+  const timeColor = isTicket ? 'text-emerald-500' : (
+    stop.type === 'food' ? 'text-rose-400' :
+    stop.type === 'attraction' ? 'text-emerald-500' :
+    stop.type === 'shopping' ? 'text-amber-500' :
+    stop.type === 'hotel' ? 'text-violet-500' :
+    stop.type === 'flight' ? 'text-brand-600' : 'text-slate-400'
+  );
+  const titleColor = isTicket ? 'text-emerald-700' : (
+    stop.type === 'hotel' ? 'text-violet-700' :
+    stop.type === 'flight' ? 'text-brand-700' : ''
+  );
+  const titleWeight = (isTicket || stop.type === 'hotel' || stop.type === 'flight') ? 'font-bold' : 'font-semibold';
+
+  // Map query
+  const mapQ = stop.mapQuery || (stop.kr ? stop.kr.name + '+부산' : '') || stop.title;
+
+  // Badges
+  const allBadges = [];
+  if (isTicket) allBadges.push({text:'已訂票', cls:'bg-emerald-500 text-white'});
+  if (stop.type === 'flight') allBadges.push({text:'航班', cls:'bg-brand-500 text-white'});
+  if (stop.type === 'hotel') allBadges.push({text:'住宿', cls:'bg-violet-100 text-violet-600'});
+  if (stop.type === 'food' && !isTicket) allBadges.push({text:'美食', cls:'bg-rose-50 text-rose-500'});
+  if (stop.badges) stop.badges.forEach(b => {
+    if (b !== '已訂票') allBadges.push({text:b, cls:'bg-amber-50 text-amber-600'});
+  });
+
+  // Action buttons
+  const hasMap = !!(stop.lat || stop.mapQuery || stop.kr);
+  const hasUber = !!(stop.lat && stop.lng);
+  const hasKr = !!(stop.kr);
+  const hasNearby = !!(stop.lat && stop.lng);
+
+  let actionsHTML = '';
+  if (hasMap || hasUber || hasKr) {
+    actionsHTML += '<div class="act-row">';
+    if (hasMap) {
+      const mq = encodeURIComponent((stop.mapQuery || (stop.kr ? stop.kr.name : '') || stop.title).replace(/\+/g,' '));
+      actionsHTML += `<a href="https://www.google.com/maps/search/${mq}" target="_blank" class="act-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>`;
+    }
+    if (hasUber) {
+      const uberAddr = stop.kr ? stop.kr.addr : (stop.mapQuery || stop.title);
+      const uberNick = stop.kr ? stop.kr.name : stop.title;
+      actionsHTML += `<a href="https://m.uber.com/ul/?action=setPickup&dropoff%5Blatitude%5D=${stop.lat}&dropoff%5Blongitude%5D=${stop.lng}&dropoff%5Bformatted_address%5D=${encodeURIComponent(uberAddr)}&dropoff%5Bnickname%5D=${encodeURIComponent(uberNick)}" target="_blank" class="act-btn uber"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-7v4h4l-5 7z"/></svg>Uber</a>`;
+    }
+    if (hasKr) {
+      actionsHTML += `<button onclick="toggleKr(this)" class="act-btn kr"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>KR</button>`;
+    }
+    actionsHTML += '</div>';
+  }
+
+  if (hasKr) {
+    actionsHTML += `<div class="kr-popup"><div class="kr-name">${stop.kr.name}</div><div class="kr-addr">${stop.kr.addr}</div><div class="kr-copy" onclick="copyKr(this)">點擊複製韓文地址</div></div>`;
+  }
+
+  if (hasNearby) {
+    actionsHTML += `<div class="nearby-row">
+      <a href="https://www.google.com/maps/search/restaurants/@${stop.lat},${stop.lng},15z" target="_blank" class="nearby-btn" style="background:#f0fdf4;color:#15803d">🍽️ 附近餐廳</a>
+      <a href="https://www.google.com/maps/search/convenience+store/@${stop.lat},${stop.lng},15z" target="_blank" class="nearby-btn" style="background:#f0f9ff;color:#0369a1">🏪 便利店</a>
+      <a href="https://www.google.com/maps/search/attractions/@${stop.lat},${stop.lng},15z" target="_blank" class="nearby-btn" style="background:#fef2f2;color:#dc2626">📍 附近景點</a>
+    </div>`;
+  }
+
+  const badgesHTML = allBadges.length ? allBadges.map(b => `<span class="inline-block mt-1 mr-0.5 text-[9px] font-semibold ${b.cls} px-2 py-0.5 rounded-full">${b.text}</span>`).join('') : '';
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'relative tl-card mb-2';
+  wrapper.dataset.idx = idx;
+  wrapper.dataset.day = dayKey;
+  wrapper.innerHTML = `
+    <div class="tl-dot ${dotClass}" style="top:14px"></div>
+    <div class="flex items-stretch gap-0">
+      <div class="drag-handle" data-drag="true">
+        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M7 2a2 2 0 110 4 2 2 0 010-4zm6 0a2 2 0 110 4 2 2 0 010-4zM7 8a2 2 0 110 4 2 2 0 010-4zm6 0a2 2 0 110 4 2 2 0 010-4zM7 14a2 2 0 110 4 2 2 0 010-4zm6 0a2 2 0 110 4 2 2 0 010-4z"/></svg>
+      </div>
+      <div class="${cardClass} flex-1">
+        <div class="text-[10px] font-bold ${timeColor}">${stop.time}</div>
+        <div class="text-[12px] ${titleWeight} ${titleColor}">${stop.title}</div>
+        ${stop.detail ? `<div class="text-[10px] text-slate-400">${stop.detail}</div>` : ''}
+        ${badgesHTML}
+        ${actionsHTML}
+      </div>
+    </div>
+  `;
+  return wrapper;
+}
+
+function renderTransitBar(fromLat, fromLng, toLat, toLng) {
+  const bar = document.createElement('div');
+  bar.className = 'transit-bar';
+  bar.onclick = () => openRoute(fromLat, fromLng, toLat, toLng);
+  bar.innerHTML = `
+    <div class="flex-1 border-t-2 border-dashed border-slate-200"></div>
+    <span class="text-[9px] text-slate-400 font-medium flex items-center gap-1 flex-shrink-0">
+      <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+      前往下一站
+    </span>
+    <div class="flex-1 border-t-2 border-dashed border-slate-200"></div>
+  `;
+  return bar;
+}
+
+function openRoute(fromLat, fromLng, toLat, toLng) {
+  const url = `https://www.google.com/maps/dir/?api=1&origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&travelmode=driving`;
+  window.open(url, '_blank');
+}
+
+// ===== DRAG TO REORDER =====
+function attachDragListeners(dayKey) {
+  const timeline = document.getElementById(dayKey + '-timeline');
+  if (!timeline) return;
+
+  let dragEl = null;
+  let startY = 0;
+  let startIdx = 0;
+  let placeholder = null;
+  let cards = [];
+
+  function getCards() {
+    return Array.from(timeline.querySelectorAll('.tl-card'));
+  }
+
+  function getCardAtY(y) {
+    const c = getCards();
+    for (let i = 0; i < c.length; i++) {
+      const rect = c[i].getBoundingClientRect();
+      if (y < rect.top + rect.height / 2) return i;
+    }
+    return c.length;
+  }
+
+  timeline.addEventListener('touchstart', e => {
+    const handle = e.target.closest('[data-drag="true"]');
+    if (!handle) return;
+    dragEl = handle.closest('.tl-card');
+    if (!dragEl) return;
+    cards = getCards();
+    startIdx = cards.indexOf(dragEl);
+    startY = e.touches[0].clientY;
+    dragEl.classList.add('dragging');
+    dragEl.style.position = 'relative';
+    // Create placeholder
+    placeholder = document.createElement('div');
+    placeholder.className = 'drag-placeholder';
+    placeholder.style.height = dragEl.offsetHeight + 'px';
+    e.preventDefault();
+  }, { passive: false });
+
+  timeline.addEventListener('touchmove', e => {
+    if (!dragEl) return;
+    e.preventDefault();
+    const y = e.touches[0].clientY;
+    const dy = y - startY;
+    dragEl.style.transform = `translateY(${dy}px)`;
+    dragEl.style.zIndex = '20';
+
+    // Determine insert position
+    const insertIdx = getCardAtY(y);
+    const currentCards = getCards().filter(c => c !== dragEl);
+    if (placeholder.parentNode) placeholder.remove();
+    if (insertIdx >= currentCards.length) {
+      timeline.appendChild(placeholder);
+    } else {
+      // Insert before insertIdx card accounting for transit bars
+      const targetCard = currentCards[insertIdx];
+      targetCard.parentNode.insertBefore(placeholder, targetCard);
+    }
+  }, { passive: false });
+
+  timeline.addEventListener('touchend', e => {
+    if (!dragEl) return;
+    const y = e.changedTouches[0].clientY;
+    const finalInsert = getCardAtY(y);
+    const currentCards = getCards().filter(c => c !== dragEl);
+
+    // Rebuild order
+    let newOrder = [];
+    const origCards = getCards();
+    // Get all cards except dragEl in their current rendered order
+    const others = origCards.filter(c => c !== dragEl);
+    const othersOrigIdx = others.map(c => parseInt(c.dataset.idx));
+
+    // Insert dragEl at finalInsert
+    const dragOrigIdx = parseInt(dragEl.dataset.idx);
+    const insertAt = Math.min(finalInsert, others.length);
+    const before = othersOrigIdx.slice(0, insertAt);
+    const after = othersOrigIdx.slice(insertAt);
+    newOrder = [...before, dragOrigIdx, ...after];
+
+    // Save new order
+    saveOrder(dayKey, newOrder);
+
+    // Clean up
+    dragEl.classList.remove('dragging');
+    dragEl.style.transform = '';
+    dragEl.style.position = '';
+    dragEl.style.zIndex = '';
+    if (placeholder.parentNode) placeholder.remove();
+    dragEl = null;
+    placeholder = null;
+
+    // Re-render
+    renderDay(dayKey);
+    showToast('順序已更新');
+  }, { passive: true });
+}
+
+// ===== RENDER ALL DAYS ON LOAD =====
+document.addEventListener('DOMContentLoaded', () => {
+  ['day1','day2','day3','day4','day5'].forEach(renderDay);
+});
+
+// ===== Bottom Nav =====
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const target = item.dataset.page;
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(target).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+
+// ===== Day Pills =====
+document.querySelectorAll('.day-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    const target = pill.dataset.day;
+    document.querySelectorAll('.day-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    document.querySelectorAll('.sub-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(target).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+
+// ===== KR Popup =====
+function toggleKr(btn){const c=btn.closest('.tl-card');if(c){const p=c.querySelector('.kr-popup');if(p)p.classList.toggle('show')}}
+function copyKr(el){const p=el.closest('.kr-popup');const t=p.querySelector('.kr-name').textContent+'\n'+p.querySelector('.kr-addr').textContent;navigator.clipboard.writeText(t).then(()=>{el.textContent='已複製!';setTimeout(()=>{el.textContent='點擊複製韓文地址'},1500)})}
+
+// ===== Toast =====
+function showToast(msg){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:8px 18px;border-radius:12px;font-size:11px;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;text-align:center;max-width:85vw;box-shadow:0 4px 20px rgba(0,0,0,.25)';document.body.appendChild(t)}t.textContent=msg;t.style.opacity='1';clearTimeout(t._timer);t._timer=setTimeout(()=>{t.style.opacity='0'},2500)}
+
+// ===== Countdown =====
+function updateCountdown(){const t=new Date('2026-05-12T13:00:00+08:00'),n=new Date(),d=t-n,el=document.getElementById('countdown');if(d<=0){el.textContent=n<=new Date('2026-05-16T22:10:00+08:00')?'旅行中!':'旅程已結束';return}const days=Math.floor(d/864e5),hrs=Math.floor((d%864e5)/36e5);el.textContent='倒數 '+days+' 天 '+hrs+' 時'}
+updateCountdown();setInterval(updateCountdown,60000);
+
+// ===== Currency =====
+let RATE=45;
+fetch('https://open.er-api.com/v6/latest/TWD').then(r=>r.json()).then(d=>{if(d.rates&&d.rates.KRW){RATE=d.rates.KRW;document.getElementById('rate-display').textContent='1 TWD ≈ '+RATE.toFixed(1)+' KRW（即時）';convertTwd()}}).catch(()=>{});
+const twdI=document.getElementById('twd-input'),krwI=document.getElementById('krw-input');
+twdI.addEventListener('input',convertTwd);krwI.addEventListener('input',convertKrw);
+function convertTwd(){const v=parseFloat(twdI.value);krwI.value=isNaN(v)?'':Math.round(v*RATE)}
+function convertKrw(){const v=parseFloat(krwI.value);twdI.value=isNaN(v)?'':Math.round(v/RATE)}
+function quickConvert(t){twdI.value=t;convertTwd()}
+convertTwd();
+
+// ===== Weather =====
+const wI={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌧️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',80:'🌦️',81:'🌧️',82:'🌧️',95:'⛈️',96:'⛈️',99:'⛈️'};
+const wD={0:'晴天',1:'大致晴',2:'多雲',3:'陰天',45:'霧',51:'小雨',53:'中雨',55:'大雨',61:'小雨',63:'中雨',65:'大雨',80:'陣雨',95:'雷雨'};
+fetch('https://api.open-meteo.com/v1/forecast?latitude=35.1796&longitude=129.0756&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia/Seoul&start_date=2026-05-12&end_date=2026-05-16').then(r=>r.json()).then(d=>{if(d.daily)for(let i=0;i<5;i++){const c=d.daily.weathercode[i],hi=Math.round(d.daily.temperature_2m_max[i]),lo=Math.round(d.daily.temperature_2m_min[i]);document.getElementById('w-icon-'+i).textContent=wI[c]||'🌤️';document.getElementById('w-temp-'+i).textContent=lo+'~'+hi+'°';document.getElementById('w-desc-'+i).textContent=wD[c]||'—'}}).catch(()=>{for(let i=0;i<5;i++)document.getElementById('w-desc-'+i).textContent='待更新'});
+
+// ===== TTS =====
+let curAudio=null;
+function speakKr(t){if(curAudio){curAudio.pause();curAudio=null}const u='https://translate.google.com/translate_tts?ie=UTF-8&tl=ko&client=tw-ob&q='+encodeURIComponent(t);curAudio=new Audio(u);curAudio.playbackRate=0.9;curAudio.play().catch(()=>{if('speechSynthesis'in window){speechSynthesis.cancel();const u2=new SpeechSynthesisUtterance(t);u2.lang='ko-KR';u2.rate=0.8;speechSynthesis.speak(u2)}else showToast('語音播放失敗')})}
+
+// ===== Packing =====
+const packItems=[{cat:'證件',items:['護照','身分證','電子機票','旅平險保單','KKday 票券截圖']},{cat:'3C',items:['手機充電器','行動電源','韓國轉接頭','耳機']},{cat:'衣物',items:['換洗衣物 x5','外套','拖鞋']},{cat:'日用品',items:['牙刷牙膏','防曬','雨傘','面紙/濕紙巾','塑膠袋']},{cat:'小朋友',items:['玩沙玩具','零食','備用衣物']}];
+const PK='busan-packing';
+function loadPacking(){const s=JSON.parse(localStorage.getItem(PK)||'{}'),c=document.getElementById('packing-list');c.innerHTML='';let tot=0,chk=0;packItems.forEach(g=>{const h=document.createElement('div');h.className='text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-2 mb-1';h.textContent=g.cat;c.appendChild(h);g.items.forEach(item=>{tot++;const ok=s[item]||false;if(ok)chk++;const r=document.createElement('label');r.className='flex items-center gap-2.5 bg-slate-50 rounded-lg px-3 py-2 cursor-pointer';r.innerHTML='<input type="checkbox" class="w-3.5 h-3.5 accent-emerald-500 rounded" '+(ok?'checked':'')+'><span class="text-[11px] '+(ok?'line-through text-slate-300':'text-slate-700')+'">'+item+'</span>';r.querySelector('input').addEventListener('change',e=>{s[item]=e.target.checked;localStorage.setItem(PK,JSON.stringify(s));apiSync('packing.php','PUT',{item_key:item,checked:e.target.checked?1:0});loadPacking()});c.appendChild(r)})});document.getElementById('pack-progress').textContent=chk+'/'+tot}
+function resetPacking(){localStorage.removeItem(PK);apiSync('packing.php','DELETE');loadPacking();showToast('清單已重置')}
+loadPacking();
+
+// ===== Expenses =====
+const EK='busan-expenses';
+function loadExpenses(){const e=JSON.parse(localStorage.getItem(EK)||'[]'),c=document.getElementById('expense-list');if(!e.length){c.innerHTML='<div class="text-[10px] text-slate-300 text-center py-3">尚未記錄</div>';document.getElementById('total-krw').textContent='0';document.getElementById('total-twd').textContent='0';return}let t=0;c.innerHTML='';e.forEach((x,i)=>{t+=x.amount;const r=document.createElement('div');r.className='flex items-center gap-2 bg-slate-50 rounded-lg px-2.5 py-1.5';r.innerHTML='<div class="flex-1"><div class="text-[11px] font-semibold text-slate-700">'+x.desc+'</div><div class="text-[9px] text-slate-400">'+x.date+'</div></div><div class="text-[11px] font-bold text-emerald-600">₩'+x.amount.toLocaleString()+'</div><button onclick="removeExpense('+i+')" class="text-slate-300 ml-1 cursor-pointer"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>';c.appendChild(r)});document.getElementById('total-krw').textContent='₩'+t.toLocaleString();document.getElementById('total-twd').textContent='$'+Math.round(t/RATE).toLocaleString()}
+function addExpense(){const d=document.getElementById('expense-desc').value.trim(),a=parseInt(document.getElementById('expense-amount').value);if(!d||isNaN(a)||a<=0){showToast('請輸入項目和金額');return}const e=JSON.parse(localStorage.getItem(EK)||'[]');const n=new Date();const dateStr=(n.getMonth()+1)+'/'+n.getDate()+' '+n.getHours()+':'+String(n.getMinutes()).padStart(2,'0');e.push({desc:d,amount:a,date:dateStr});localStorage.setItem(EK,JSON.stringify(e));apiSync('expenses.php','POST',{desc_text:d,amount:a});document.getElementById('expense-desc').value='';document.getElementById('expense-amount').value='';loadExpenses()}
+function removeExpense(i){const e=JSON.parse(localStorage.getItem(EK)||'[]');const removed=e.splice(i,1)[0];localStorage.setItem(EK,JSON.stringify(e));if(removed&&removed.id)apiSync('expenses.php?id='+removed.id,'DELETE');loadExpenses()}
+function clearExpenses(){if(confirm('確定清除所有記錄？')){localStorage.removeItem(EK);apiSync('expenses.php?all=1','DELETE');loadExpenses();showToast('已清除')}}
+loadExpenses();
+</script>
 </body>
 </html>

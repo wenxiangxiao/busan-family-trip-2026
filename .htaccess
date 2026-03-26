@@ -1,0 +1,30 @@
+# 釜山旅遊 — Apache 設定
+RewriteEngine On
+
+# 強制 HTTPS（cPanel 部署時啟用）
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# 預設首頁
+DirectoryIndex index.html
+
+# PHP 設定
+<IfModule mod_php.c>
+    php_value upload_max_filesize 2M
+    php_value post_max_size 2M
+    php_value default_charset "UTF-8"
+</IfModule>
+
+# CORS for API
+<IfModule mod_headers.c>
+    <FilesMatch "\.(php)$">
+        Header set Access-Control-Allow-Origin "*"
+        Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+        Header set Access-Control-Allow-Headers "Content-Type"
+    </FilesMatch>
+</IfModule>
+
+# 防止直接瀏覽 config
+<Files "config.php">
+    Require all denied
+</Files>

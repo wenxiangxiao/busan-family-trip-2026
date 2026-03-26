@@ -1,0 +1,10 @@
+# 部署時的敏感設定（config.php 有密碼，推上去但部署時要改）
+# 如果密碼寫死在 config.php，取消下面這行的註解
+# api/config.php
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
