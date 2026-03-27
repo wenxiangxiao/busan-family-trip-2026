@@ -322,7 +322,40 @@ fetch(API_BASE + '/itinerary.php', { method: 'GET' })
   .catch(() => { console.log('API not available, using localStorage'); });
 
 async function loadFromAPI() {
-  // 載入行程（用 API 資料覆蓋本地）— 目前行程用靜態 JS 資料，排序用 API 同步
+  // 載入行程排序（從 DB 讀取排序並套用到 JS 資料）
+  try {
+    const r = await fetch(API_BASE + '/itinerary.php');
+    const d = await r.json();
+    if (d.days) {
+      // 用 DB 的 sort_order 來重排本地 JS 資料
+      for (const [dayNum, dbStops] of Object.entries(d.days)) {
+        const dayKey = 'day' + dayNum;
+        const origStops = DAYS_ORIGINAL[dayKey];
+        if (!origStops) continue;
+
+        // 把 DB id 對應到本地 stop（用 title 匹配）
+        const matched = [];
+        for (const dbStop of dbStops) {
+          const localIdx = origStops.findIndex(s => s.title === dbStop.title);
+          if (localIdx >= 0) {
+            origStops[localIdx].dbId = parseInt(dbStop.id);
+            matched.push(localIdx);
+          }
+        }
+
+        // 如果 DB 排序跟預設不同，套用 DB 排序
+        if (matched.length === origStops.length) {
+          const isDefaultOrder = matched.every((v, i) => v === i);
+          if (!isDefaultOrder) {
+            DAYS[dayKey] = matched.map(i => origStops[i]);
+            localStorage.setItem(ORDER_KEYS[dayKey], JSON.stringify(matched));
+            renderDay(dayKey);
+          }
+        }
+      }
+    }
+  } catch(e) { console.warn('Failed to load itinerary from API:', e); }
+
   // 載入花費
   try {
     const r = await fetch(API_BASE + '/expenses.php');
@@ -436,15 +469,28 @@ function loadSavedOrder(dayKey) {
 
 function saveOrder(dayKey, orderArr) {
   try { localStorage.setItem(ORDER_KEYS[dayKey], JSON.stringify(orderArr)); } catch(e) {}
-  // Sync to API — send the ID array for the day
+  // Sync to API — send DB id array in new order
+  if (!USE_API) return;
   const dayNum = parseInt(dayKey.replace('day',''));
-  apiSync('itinerary.php', 'PUT', { day: dayNum, order: orderArr });
+  const origStops = DAYS_ORIGINAL[dayKey];
+  // Map local indices to DB ids
+  const dbIds = orderArr.map(i => origStops[i]?.dbId).filter(id => id != null);
+  if (dbIds.length > 0) {
+    apiSync('itinerary.php', 'PUT', { day: dayNum, order: dbIds });
+  }
 }
 
 function resetOrder(dayKey) {
   localStorage.removeItem(ORDER_KEYS[dayKey]);
   DAYS[dayKey] = JSON.parse(JSON.stringify(DAYS_ORIGINAL[dayKey]));
   renderDay(dayKey);
+  // Reset API order to original
+  const dayNum = parseInt(dayKey.replace('day',''));
+  const origStops = DAYS_ORIGINAL[dayKey];
+  const dbIds = origStops.map(s => s.dbId).filter(id => id != null);
+  if (dbIds.length > 0) {
+    apiSync('itinerary.php', 'PUT', { day: dayNum, order: dbIds });
+  }
   showToast('順序已重置');
 }
 
