@@ -97,11 +97,6 @@ body.is-dragging,body.is-dragging *{user-select:none!important;-webkit-user-sele
 
   <!-- Overview -->
   <div class="sub-panel active px-4 pt-4 pb-6 max-w-lg mx-auto" id="overview">
-    <div class="grid grid-cols-3 gap-2.5 mb-4">
-      <div class="bg-white rounded-2xl p-3 text-center shadow-sm"><div class="font-heading text-xl font-extrabold text-brand-600">5</div><div class="text-[12px] text-slate-400">Days</div></div>
-      <div class="bg-white rounded-2xl p-3 text-center shadow-sm"><div class="font-heading text-xl font-extrabold text-brand-600">4</div><div class="text-[12px] text-slate-400">Nights</div></div>
-      <div class="bg-white rounded-2xl p-3 text-center shadow-sm"><div class="font-heading text-xl font-extrabold text-brand-600">7+</div><div class="text-[12px] text-slate-400">Spots</div></div>
-    </div>
     <!-- Flight -->
     <div class="bg-gradient-to-br from-brand-50 to-brand-100 rounded-2xl p-3.5 mb-3 border border-brand-200">
       <h3 class="text-[14px] font-bold text-brand-700 mb-2">航班資訊</h3>
@@ -252,9 +247,9 @@ body.is-dragging,body.is-dragging *{user-select:none!important;-webkit-user-sele
       <div class="bg-brand-50 rounded-xl p-2.5 text-center"><div class="text-[11px] text-brand-600 font-semibold">≈ TWD</div><div class="font-heading text-base font-extrabold text-brand-700" id="total-twd">0</div></div>
     </div>
     <div class="flex gap-1.5 mb-2">
-      <input id="expense-desc" type="text" placeholder="項目" class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-[13px] focus:outline-none focus:border-brand-400">
-      <input id="expense-amount" type="number" inputmode="decimal" placeholder="金額(₩)" class="w-24 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-[13px] focus:outline-none focus:border-brand-400">
-      <button onclick="addExpense()" class="bg-emerald-500 text-white px-3 rounded-lg text-[12px] font-semibold cursor-pointer min-h-[36px]">+</button>
+      <input id="expense-desc" type="text" placeholder="項目（午餐、門票...）" class="flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-[13px] focus:outline-none focus:border-brand-400">
+      <input id="expense-amount" type="number" inputmode="decimal" placeholder="金額(₩)" class="w-20 flex-shrink-0 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-[13px] focus:outline-none focus:border-brand-400">
+      <button onclick="addExpense()" class="bg-emerald-500 text-white w-10 flex-shrink-0 rounded-lg text-[14px] font-bold cursor-pointer min-h-[36px]">+</button>
     </div>
     <div id="expense-list" class="space-y-1 max-h-48 overflow-y-auto"><div class="text-[12px] text-slate-300 text-center py-3">尚未記錄</div></div>
     <button onclick="clearExpenses()" class="mt-2 text-[11px] text-slate-400 underline cursor-pointer">清除所有</button>
@@ -903,7 +898,26 @@ fetch('https://api.open-meteo.com/v1/forecast?latitude=35.1796&longitude=129.075
 
 // ===== TTS =====
 let curAudio=null;
-function speakKr(t){if(curAudio){curAudio.pause();curAudio=null}const u='https://translate.google.com/translate_tts?ie=UTF-8&tl=ko&client=tw-ob&q='+encodeURIComponent(t);curAudio=new Audio(u);curAudio.playbackRate=0.9;curAudio.play().catch(()=>{if('speechSynthesis'in window){speechSynthesis.cancel();const u2=new SpeechSynthesisUtterance(t);u2.lang='ko-KR';u2.rate=0.8;speechSynthesis.speak(u2)}else showToast('語音播放失敗')})}
+// Safari 需要在用戶觸控事件中直接觸發 speechSynthesis
+// Google TTS 在 Safari 跨域被擋，所以 Safari 優先用 Web Speech API
+const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+function speakKr(t){
+  // 優先用 Web Speech API（Safari 相容性最好）
+  if ('speechSynthesis' in window) {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = 'ko-KR';
+    u.rate = 0.8;
+    speechSynthesis.speak(u);
+    return;
+  }
+  // Fallback: Google TTS（非 Safari）
+  if (curAudio) { curAudio.pause(); curAudio = null; }
+  const url = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=ko&client=tw-ob&q=' + encodeURIComponent(t);
+  curAudio = new Audio(url);
+  curAudio.playbackRate = 0.9;
+  curAudio.play().catch(() => { showToast('語音播放失敗'); });
+}
 
 // ===== Packing =====
 const packItems=[{cat:'證件',items:['護照','身分證','電子機票','旅平險保單','KKday 票券截圖']},{cat:'3C',items:['手機充電器','行動電源','韓國轉接頭','耳機']},{cat:'衣物',items:['換洗衣物 x5','外套','拖鞋']},{cat:'日用品',items:['牙刷牙膏','防曬','雨傘','面紙/濕紙巾','塑膠袋']},{cat:'小朋友',items:['玩沙玩具','零食','備用衣物']}];
