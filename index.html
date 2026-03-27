@@ -7,6 +7,9 @@
 <meta name="theme-color" content="#0c4a6e">
 <title>釜山家族旅遊 2026</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -57,6 +60,9 @@ body{font-family:'Noto Sans TC','Outfit',sans-serif;padding-bottom:calc(72px + e
 .dragging{opacity:0.8;box-shadow:0 8px 25px rgba(0,0,0,.15);z-index:10;transform:scale(1.01);user-select:none;-webkit-user-select:none}
 .dragging *{user-select:none;-webkit-user-select:none}
 body.is-dragging,body.is-dragging *{user-select:none!important;-webkit-user-select:none!important;-webkit-touch-callout:none!important}
+body.is-dragging .insert-btn{display:none!important}
+body.is-dragging .transit-bar{display:none!important}
+body.is-dragging .menu-section{display:none!important}
 .drag-placeholder{border:2px dashed #cbd5e1;border-radius:12px;background:#f8fafc;margin-bottom:0}
 /* Transit bar */
 .transit-bar{display:flex;align-items:center;gap:8px;padding:6px 8px;margin:2px 0;cursor:pointer;border-radius:8px;transition:background .15s}
@@ -68,6 +74,84 @@ body.is-dragging,body.is-dragging *{user-select:none!important;-webkit-user-sele
 /* Reset order button */
 .reset-order-btn{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;padding:6px 14px;border-radius:99px;background:#f1f5f9;color:#64748b;cursor:pointer;border:none;transition:background .15s;margin-bottom:10px}
 .reset-order-btn:active{background:#e2e8f0}
+/* Insert stop button */
+.insert-btn{display:flex;align-items:center;justify-content:center;width:100%;padding:4px 0;cursor:pointer;opacity:0;transition:opacity .2s}
+.insert-btn:hover,.insert-btn:active{opacity:1}
+.insert-btn .insert-circle{width:22px;height:22px;border-radius:50%;background:#e0f2fe;color:#0369a1;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;border:1.5px dashed #93c5fd;transition:all .15s}
+.insert-btn:hover .insert-circle{background:#0ea5e9;color:#fff;border-color:#0ea5e9}
+/* Always show on mobile (no hover) */
+@media(hover:none){.insert-btn{opacity:.5}}
+/* Add stop modal */
+.add-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:flex-end;justify-content:center}
+.add-modal-overlay.show{display:flex}
+.add-modal{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));width:100%;max-width:480px;animation:slideUp .25s ease-out}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.add-modal h3{font-size:16px;font-weight:700;margin-bottom:12px}
+.add-modal label{font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:4px;margin-top:10px}
+.add-modal input,.add-modal select{width:100%;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;font-size:14px;outline:none}
+.add-modal input:focus,.add-modal select:focus{border-color:#0ea5e9}
+.add-modal .btn-row{display:flex;gap:8px;margin-top:16px}
+.add-modal .btn-row button{flex:1;padding:12px;border-radius:12px;font-size:14px;font-weight:600;border:none;cursor:pointer}
+.add-modal .btn-cancel{background:#f1f5f9;color:#64748b}
+.add-modal .btn-confirm{background:#0ea5e9;color:#fff}
+/* Edit modal reuses add-modal styles */
+.add-modal .btn-delete{background:#fef2f2;color:#ef4444}
+.add-modal .btn-delete:active{background:#fee2e2}
+/* Edit pencil icon */
+.edit-trigger{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;color:#cbd5e1;cursor:pointer;border:none;background:none;transition:color .15s;flex-shrink:0;padding:0}
+.edit-trigger:active{color:#0ea5e9}
+/* Menu section */
+.menu-section{margin-top:8px;background:#fafafa;border-radius:10px;overflow:hidden;border:1px solid #f1f5f9}
+.menu-toggle{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;cursor:pointer;font-size:12px;font-weight:600;color:#64748b;transition:background .15s}
+.menu-toggle:active{background:#f1f5f9}
+.menu-toggle i{transition:transform .2s}
+.menu-toggle.open i{transform:rotate(180deg)}
+.menu-items{display:none;padding:0 10px 8px}
+.menu-items.show{display:block}
+.menu-item{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;border-bottom:1px solid #f1f5f9;font-size:12px}
+.menu-item:last-child{border-bottom:none}
+.menu-item .mi-name{color:#334155;font-weight:500}
+.menu-item .mi-cn{color:#94a3b8;font-size:11px;margin-left:4px}
+.menu-item .mi-price{color:#0ea5e9;font-weight:600;white-space:nowrap;margin-left:8px}
+/* Address display */
+.addr-line{display:flex;align-items:flex-start;gap:4px;margin-top:4px;font-size:11px;color:#94a3b8;line-height:1.4}
+.addr-line i{margin-top:2px;flex-shrink:0;font-size:10px}
+/* Map view */
+.view-toggle{display:flex;gap:0;background:#f1f5f9;border-radius:12px;padding:3px;margin-bottom:12px}
+.view-toggle-btn{flex:1;text-align:center;padding:8px 0;border-radius:10px;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;transition:all .2s;border:none;background:none}
+.view-toggle-btn.active{background:#fff;color:#0ea5e9;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.map-wrapper{display:flex;flex-direction:column;height:calc(100vh - 180px);min-height:450px;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0}
+.map-container{flex:1;position:relative;min-height:0}
+.map-carousel{flex-shrink:0;background:#0f172a;padding:10px 0 12px;position:relative;z-index:1000}
+.map-carousel-scroll{display:flex;gap:10px;overflow-x:auto;padding:0 12px;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
+.map-carousel-scroll::-webkit-scrollbar{display:none}
+.map-card{scroll-snap-align:start;flex:0 0 280px;background:rgba(30,41,59,.95);border-radius:14px;padding:12px 14px;color:#fff;border:1px solid rgba(255,255,255,.08);cursor:pointer;transition:transform .15s,border-color .15s}
+.map-card:active{transform:scale(.97)}
+.map-card.mc-active{border-color:#38bdf8}
+.map-card .mc-head{display:flex;align-items:center;justify-content:space-between}
+.map-card .mc-time{font-size:11px;font-weight:700;color:#38bdf8}
+.map-card .mc-num{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.map-card .mc-title{font-size:14px;font-weight:700;color:#f1f5f9;margin-top:3px}
+.map-card .mc-kr{font-size:11px;color:#94a3b8;font-family:'Noto Sans KR',sans-serif;margin-top:1px}
+.map-card .mc-addr{font-size:10px;color:#64748b;margin-top:1px}
+.map-card .mc-badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;margin-top:5px;margin-right:3px}
+.map-card .mc-nav{display:inline-flex;align-items:center;gap:3px;margin-top:6px;background:#0ea5e9;color:#fff;padding:5px 10px;border-radius:8px;font-size:11px;font-weight:600;text-decoration:none}
+.map-card .mc-nav:active{opacity:.7}
+.map-legend{position:absolute;top:10px;right:10px;z-index:1000;background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border-radius:10px;padding:6px 10px;font-size:11px;display:flex;flex-direction:column;gap:2px;box-shadow:0 2px 8px rgba(0,0,0,.15);color:#334155}
+.map-legend-item{display:flex;align-items:center;gap:5px}
+.map-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+/* Custom numbered markers */
+.numbered-marker{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+/* Map popup */
+.map-popup .leaflet-popup-content-wrapper{border-radius:12px;padding:0;overflow:hidden}
+.map-popup .leaflet-popup-content{margin:0;min-width:220px}
+.map-popup-inner{padding:12px}
+.map-popup-time{font-size:11px;font-weight:700;color:#0ea5e9}
+.map-popup-title{font-size:14px;font-weight:700;color:#1e293b;margin-top:2px}
+.map-popup-detail{font-size:12px;color:#64748b;margin-top:2px}
+.map-popup-addr{font-size:11px;color:#94a3b8;margin-top:4px}
+.map-popup-nav{display:inline-flex;align-items:center;gap:4px;margin-top:8px;background:#0ea5e9;color:#fff;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer}
+.map-popup-nav:active{opacity:.8}
 </style>
 </head>
 <body class="bg-surface-50 text-slate-800 antialiased">
@@ -146,7 +230,16 @@ body.is-dragging,body.is-dragging *{user-select:none!important;-webkit-user-sele
       <h2 class="font-heading text-base font-bold mt-0.5">出發日 — 永和 → 釜山</h2>
       <p class="text-sky-200 text-[13px]">桃園出發，傍晚抵達金海機場</p>
     </div>
-    <div id="day1-stops"></div>
+    <div class="view-toggle">
+      <button class="view-toggle-btn active" onclick="switchView('day1','list',this)"><i class="fa-solid fa-list fa-xs"></i> 行程</button>
+      <button class="view-toggle-btn" onclick="switchView('day1','map',this)"><i class="fa-solid fa-map fa-xs"></i> 地圖</button>
+    </div>
+    <div id="day1-list-view">
+      <div id="day1-stops"></div>
+    </div>
+    <div id="day1-map-view" style="display:none">
+      <div class="map-wrapper"><div id="day1-map" class="map-container"></div><div class="map-carousel"><div id="day1-carousel" class="map-carousel-scroll"></div></div></div>
+    </div>
     <div class="mt-4 bg-violet-50 border border-violet-100 rounded-xl px-3 py-2.5 flex items-center gap-2"><svg class="w-4 h-4 text-violet-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21V7a2 2 0 012-2h6a2 2 0 012 2v14M21 21V11a2 2 0 00-2-2h-4a2 2 0 00-2 2v10"/></svg><span class="text-[13px] font-semibold text-violet-700">今晚：Paramion 飯店</span></div>
   </div>
 
@@ -156,7 +249,16 @@ body.is-dragging,body.is-dragging *{user-select:none!important;-webkit-user-sele
       <h2 class="font-heading text-base font-bold mt-0.5">南浦洞 &middot; 松島灣</h2>
       <p class="text-emerald-200 text-[13px]">纜車、岩南公園、國際市場</p>
     </div>
-    <div id="day2-stops"></div>
+    <div class="view-toggle">
+      <button class="view-toggle-btn active" onclick="switchView('day2','list',this)"><i class="fa-solid fa-list fa-xs"></i> 行程</button>
+      <button class="view-toggle-btn" onclick="switchView('day2','map',this)"><i class="fa-solid fa-map fa-xs"></i> 地圖</button>
+    </div>
+    <div id="day2-list-view">
+      <div id="day2-stops"></div>
+    </div>
+    <div id="day2-map-view" style="display:none">
+      <div class="map-wrapper"><div id="day2-map" class="map-container"></div><div class="map-carousel"><div id="day2-carousel" class="map-carousel-scroll"></div></div></div>
+    </div>
     <div class="mt-4 bg-violet-50 border border-violet-100 rounded-xl px-3 py-2.5 flex items-center gap-2"><svg class="w-4 h-4 text-violet-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21V7a2 2 0 012-2h6a2 2 0 012 2v14M21 21V11a2 2 0 00-2-2h-4a2 2 0 00-2 2v10"/></svg><span class="text-[13px] font-semibold text-violet-700">今晚：Paramion 飯店</span></div>
   </div>
 
@@ -166,7 +268,16 @@ body.is-dragging,body.is-dragging *{user-select:none!important;-webkit-user-sele
       <h2 class="font-heading text-base font-bold mt-0.5">海雲台 &middot; 灌籃高手平交道</h2>
       <p class="text-amber-100 text-[13px]">藍線公園、SEALIFE、鹽烤肉</p>
     </div>
-    <div id="day3-stops"></div>
+    <div class="view-toggle">
+      <button class="view-toggle-btn active" onclick="switchView('day3','list',this)"><i class="fa-solid fa-list fa-xs"></i> 行程</button>
+      <button class="view-toggle-btn" onclick="switchView('day3','map',this)"><i class="fa-solid fa-map fa-xs"></i> 地圖</button>
+    </div>
+    <div id="day3-list-view">
+      <div id="day3-stops"></div>
+    </div>
+    <div id="day3-map-view" style="display:none">
+      <div class="map-wrapper"><div id="day3-map" class="map-container"></div><div class="map-carousel"><div id="day3-carousel" class="map-carousel-scroll"></div></div></div>
+    </div>
     <div class="mt-4 bg-violet-50 border border-violet-100 rounded-xl px-3 py-2.5 flex items-center gap-2"><svg class="w-4 h-4 text-violet-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21V7a2 2 0 012-2h6a2 2 0 012 2v14M21 21V11a2 2 0 00-2-2h-4a2 2 0 00-2 2v10"/></svg><span class="text-[13px] font-semibold text-violet-700">今晚：海雲台民宿（Airbnb）</span></div>
   </div>
 
@@ -176,7 +287,16 @@ body.is-dragging,body.is-dragging *{user-select:none!important;-webkit-user-sele
       <h2 class="font-heading text-base font-bold mt-0.5">海雲台玩樂日</h2>
       <p class="text-rose-200 text-[13px]">Luge、樂天世界、生醃螃蟹、炸雞</p>
     </div>
-    <div id="day4-stops"></div>
+    <div class="view-toggle">
+      <button class="view-toggle-btn active" onclick="switchView('day4','list',this)"><i class="fa-solid fa-list fa-xs"></i> 行程</button>
+      <button class="view-toggle-btn" onclick="switchView('day4','map',this)"><i class="fa-solid fa-map fa-xs"></i> 地圖</button>
+    </div>
+    <div id="day4-list-view">
+      <div id="day4-stops"></div>
+    </div>
+    <div id="day4-map-view" style="display:none">
+      <div class="map-wrapper"><div id="day4-map" class="map-container"></div><div class="map-carousel"><div id="day4-carousel" class="map-carousel-scroll"></div></div></div>
+    </div>
     <div class="mt-4 bg-violet-50 border border-violet-100 rounded-xl px-3 py-2.5 flex items-center gap-2"><svg class="w-4 h-4 text-violet-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21V7a2 2 0 012-2h6a2 2 0 012 2v14M21 21V11a2 2 0 00-2-2h-4a2 2 0 00-2 2v10"/></svg><span class="text-[13px] font-semibold text-violet-700">今晚：海雲台民宿（Airbnb）</span></div>
   </div>
 
@@ -186,7 +306,16 @@ body.is-dragging,body.is-dragging *{user-select:none!important;-webkit-user-sele
       <h2 class="font-heading text-base font-bold mt-0.5">回程日 — 釜山 → 桃園</h2>
       <p class="text-violet-200 text-[13px]">ARTE MUSEUM、X the SKY、晚班機回台</p>
     </div>
-    <div id="day5-stops"></div>
+    <div class="view-toggle">
+      <button class="view-toggle-btn active" onclick="switchView('day5','list',this)"><i class="fa-solid fa-list fa-xs"></i> 行程</button>
+      <button class="view-toggle-btn" onclick="switchView('day5','map',this)"><i class="fa-solid fa-map fa-xs"></i> 地圖</button>
+    </div>
+    <div id="day5-list-view">
+      <div id="day5-stops"></div>
+    </div>
+    <div id="day5-map-view" style="display:none">
+      <div class="map-wrapper"><div id="day5-map" class="map-container"></div><div class="map-carousel"><div id="day5-carousel" class="map-carousel-scroll"></div></div></div>
+    </div>
   </div>
 </div>
 
@@ -280,6 +409,61 @@ body.is-dragging,body.is-dragging *{user-select:none!important;-webkit-user-sele
       <div class="phrase-card flex items-center gap-3 bg-white rounded-xl px-3 py-2.5" onclick="speakKr('도와주세요')"><div class="flex-1"><div class="text-[14px] font-semibold">請幫幫我</div><div class="font-kr text-[16px] font-bold text-red-600">도와주세요</div></div><svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
       <div class="phrase-card flex items-center gap-3 bg-white rounded-xl px-3 py-2.5" onclick="speakKr('병원에 데려다 주세요')"><div class="flex-1"><div class="text-[14px] font-semibold">請帶我去醫院</div><div class="font-kr text-[16px] font-bold text-red-600">병원에 데려다 주세요</div></div><svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
       <div class="phrase-card flex items-center gap-3 bg-white rounded-xl px-3 py-2.5" onclick="speakKr('저는 대만 사람이에요')"><div class="flex-1"><div class="text-[14px] font-semibold">我是台灣人</div><div class="font-kr text-[16px] font-bold text-red-600">저는 대만 사람이에요</div></div><svg class="w-5 h-5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217z" clip-rule="evenodd"/></svg></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== ADD STOP MODAL ========== -->
+<div class="add-modal-overlay" id="add-modal-overlay" onclick="if(event.target===this)closeAddModal()">
+  <div class="add-modal">
+    <h3><i class="fa-solid fa-plus fa-sm" style="color:#0ea5e9"></i> 插入行程</h3>
+    <label>時間</label>
+    <input type="text" id="add-time" placeholder="例：13:00 或 下午">
+    <label>標題</label>
+    <input type="text" id="add-title" placeholder="例：海雲台咖啡廳">
+    <label>備註</label>
+    <input type="text" id="add-detail" placeholder="選填">
+    <label>類型</label>
+    <select id="add-type">
+      <option value="food">美食</option>
+      <option value="attraction">景點</option>
+      <option value="shopping">購物</option>
+      <option value="transport">交通</option>
+      <option value="hotel">住宿</option>
+    </select>
+    <label>Google Maps 搜尋關鍵字（選填）</label>
+    <input type="text" id="add-mapquery" placeholder="例：스타벅스+해운대">
+    <div class="btn-row">
+      <button class="btn-cancel" onclick="closeAddModal()">取消</button>
+      <button class="btn-confirm" onclick="confirmAddStop()">新增</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== EDIT STOP MODAL ========== -->
+<div class="add-modal-overlay" id="edit-modal-overlay" onclick="if(event.target===this)closeEditModal()">
+  <div class="add-modal">
+    <h3><i class="fa-solid fa-pen-to-square fa-sm" style="color:#0ea5e9"></i> 編輯行程</h3>
+    <label>時間</label>
+    <input type="text" id="edit-time" placeholder="例：13:00">
+    <label>標題</label>
+    <input type="text" id="edit-title" placeholder="行程名稱">
+    <label>備註</label>
+    <input type="text" id="edit-detail" placeholder="選填">
+    <label>類型</label>
+    <select id="edit-type">
+      <option value="food">美食</option>
+      <option value="attraction">景點</option>
+      <option value="shopping">購物</option>
+      <option value="transport">交通</option>
+      <option value="hotel">住宿</option>
+      <option value="flight">航班</option>
+    </select>
+    <label>Google Maps 搜尋關鍵字（選填）</label>
+    <input type="text" id="edit-mapquery" placeholder="例：스타벅스+해운대">
+    <div class="btn-row" id="edit-btn-row">
+      <button class="btn-cancel" onclick="closeEditModal()">取消</button>
+      <button class="btn-confirm" onclick="confirmEditStop()">儲存</button>
     </div>
   </div>
 </div>
@@ -393,52 +577,122 @@ const DAYS_ORIGINAL = {
     { time:'16:40', title:'虎航 IT210 起飛', detail:'桃園 → 金海國際機場', type:'flight' },
     { time:'19:55', title:'抵達金海國際機場', detail:'入境、提領行李', type:'transport', lat:35.1795, lng:128.9382, mapQuery:'김해국제공항' },
     { time:'20:55', title:'UBER 前往飯店', detail:'車程約 35 分鐘', type:'transport', lat:35.0982, lng:129.0325, kr:{ name:'파라미온 호텔 부산', addr:'부산광역시 중구 광복로 55 (남포동)' } },
-    { time:'21:30', title:'Paramion 飯店 Check-in', detail:'', type:'hotel', lat:35.0982, lng:129.0325, mapQuery:'파라미온+호텔+부산+남포동' },
-    { time:'晚餐', title:'南浦雪濃湯', detail:'', type:'food', lat:35.0978, lng:129.0305, kr:{ name:'남포설렁탕', addr:'부산광역시 중구 남포동 (광복로 부근)' } }
+    { time:'21:30', title:'Paramion 飯店 Check-in', detail:'', type:'hotel', lat:35.0982, lng:129.0325, mapQuery:'파라미온+호텔+부산+남포동', kr:{ name:'파라미온 호텔 부산', addr:'부산광역시 중구 광복로 55 (남포동)' } },
+    { time:'晚餐', title:'南浦雪濃湯', detail:'24小時營業', type:'food', lat:35.0978, lng:129.0305, kr:{ name:'남포설렁탕', addr:'부산광역시 중구 남포동2가 22-1' }, menu:[
+      {kr:'설렁탕 (보통)',cn:'雪濃湯（普通）',price:'₩10,000'},
+      {kr:'설렁탕 (특)',cn:'雪濃湯（特）',price:'₩12,000'},
+      {kr:'떡만두설렁탕',cn:'年糕餃子雪濃湯',price:'₩11,000'},
+      {kr:'갈비탕',cn:'排骨湯',price:'₩14,000'},
+      {kr:'육개장',cn:'辣牛肉湯',price:'₩11,000'},
+      {kr:'도가니탕',cn:'牛膝湯',price:'₩15,000'},
+      {kr:'맛보기수육',cn:'白切牛肉（試吃份）',price:'₩13,000'},
+    ] }
   ],
   day2: [
     { time:'09:30', title:'Paramion 飯店出發', detail:'', type:'transport' },
-    { time:'12:00', title:'罐頭市場（早午餐）', detail:'順逛國際市場，買棉被', type:'food', lat:35.1003, lng:129.0280, kr:{ name:'통조림시장 / 국제시장', addr:'부산광역시 중구 국제시장2길 25' }, badges:['美食','購物'] },
+    { time:'12:00', title:'罐頭市場（早午餐）', detail:'順逛國際市場，買棉被', type:'food', lat:35.1003, lng:129.0280, kr:{ name:'통조림시장 / 국제시장', addr:'부산광역시 중구 국제시장2길 25' }, badges:['美食','購物'], menu:[
+      {kr:'통조림 요리',cn:'罐頭料理（各式）',price:'₩5,000~'},
+      {kr:'어묵',cn:'魚板串',price:'₩1,000~'},
+      {kr:'씨앗호떡',cn:'堅果糖餅',price:'₩2,000'},
+      {kr:'비빔당면',cn:'涼拌冬粉',price:'₩5,000'},
+      {kr:'떡볶이',cn:'辣炒年糕',price:'₩4,000'},
+    ] },
     { time:'—', title:'回飯店放棉被', detail:'車程約 20 分鐘', type:'transport' },
     { time:'13:00', title:'松島灣纜車站', detail:'KKday 換票入場', type:'attraction', ticket:true, lat:35.0685, lng:129.0170, kr:{ name:'부산 송도 해상케이블카', addr:'부산광역시 서구 송도해변로 171' } },
     { time:'13:30', title:'岩南公園', detail:'停留約 1 小時', type:'attraction', lat:35.0632, lng:129.0130, mapQuery:'암남공원+부산' },
     { time:'14:00', title:'松島灣纜車回程', detail:'', type:'attraction', ticket:true },
-    { time:'14:30', title:'濟州家海鮮粥（南浦站本店）', detail:'', type:'food', lat:35.0975, lng:129.0310, kr:{ name:'제주가해물죽 남포역본점', addr:'부산광역시 중구 남포동2가' } },
+    { time:'14:30', title:'濟州家海鮮粥（南浦站本店）', detail:'', type:'food', lat:35.0975, lng:129.0310, kr:{ name:'제주가해물죽 남포역본점', addr:'부산광역시 중구 남포동2가 40-1' }, menu:[
+      {kr:'전복해물죽',cn:'鮑魚海鮮粥',price:'₩12,000'},
+      {kr:'문어해물죽',cn:'章魚海鮮粥',price:'₩11,000'},
+      {kr:'새우해물죽',cn:'鮮蝦海鮮粥',price:'₩10,000'},
+      {kr:'참치야채죽',cn:'鮪魚蔬菜粥',price:'₩9,000'},
+      {kr:'전복내장죽',cn:'鮑魚內臟粥',price:'₩13,000'},
+    ] },
     { time:'15:30', title:'逛大創', detail:'', type:'shopping' },
     { time:'17:30', title:'回飯店放東西', detail:'', type:'transport' },
     { time:'傍晚', title:'BIFF 廣場', detail:'逛逛 + 買隔天早餐', type:'shopping', lat:35.0985, lng:129.0290, mapQuery:'BIFF광장+부산' },
-    { time:'晚餐', title:'元祖糖餅', detail:'', type:'food', lat:35.0984, lng:129.0292, mapQuery:'원조씨앗호떡+부산+BIFF' }
+    { time:'晚餐', title:'元祖糖餅', detail:'BIFF廣場必吃街頭小吃', type:'food', lat:35.0984, lng:129.0292, mapQuery:'원조씨앗호떡+부산+BIFF', menu:[
+      {kr:'씨앗호떡',cn:'堅果糖餅',price:'₩2,000'},
+      {kr:'야채호떡',cn:'蔬菜糖餅',price:'₩2,000'},
+    ] }
   ],
   day3: [
     { time:'10:00', title:'民宿早餐（麵包）', detail:'退房離開 Paramion', type:'food' },
     { time:'11:00', title:'前往海雲台民宿', detail:'Airbnb 寄放行李', type:'transport' },
-    { time:'11:30', title:'自然島鹽麵包', detail:'', type:'food', lat:35.1590, lng:129.1600, mapQuery:'자연도소금빵+해운대' },
+    { time:'11:30', title:'自然島鹽麵包', detail:'海雲台超人氣麵包店', type:'food', lat:35.1590, lng:129.1600, mapQuery:'자연도소금빵+해운대', kr:{ name:'자연도소금빵 해운대점', addr:'부산광역시 해운대구 해운대해변로298번길 24' }, menu:[
+      {kr:'소금빵',cn:'鹽麵包',price:'₩3,500'},
+      {kr:'크림소금빵',cn:'奶油鹽麵包',price:'₩4,000'},
+      {kr:'앙버터소금빵',cn:'紅豆奶油鹽麵包',price:'₩4,500'},
+      {kr:'마늘소금빵',cn:'大蒜鹽麵包',price:'₩4,000'},
+    ] },
     { time:'12:00', title:'海雲台藍線公園（尾浦站）', detail:'搭到青沙浦站下車', type:'attraction', ticket:true, lat:35.1623, lng:129.1710, mapQuery:'해운대블루라인파크+미포정거장' },
     { time:'13:00', title:'灌籃高手平交道', detail:'經典打卡點!', type:'attraction', lat:35.1610, lng:129.1820, mapQuery:'청사포+슬램덩크+건널목+부산' },
-    { time:'13:20', title:'조개뷰 海雲台本店（烤扇貝）', detail:'', type:'food', lat:35.1590, lng:129.1630, mapQuery:'조개뷰+해운대본점' },
+    { time:'13:20', title:'조개뷰 海雲台本店（烤扇貝）', detail:'', type:'food', lat:35.1590, lng:129.1630, mapQuery:'조개뷰+해운대본점', kr:{ name:'조개뷰 해운대본점', addr:'부산광역시 해운대구 중동1로 11' }, menu:[
+      {kr:'조개구이 세트 (2인)',cn:'烤貝類套餐（2人）',price:'₩39,000'},
+      {kr:'조개구이 세트 (3인)',cn:'烤貝類套餐（3人）',price:'₩55,000'},
+      {kr:'가리비구이',cn:'烤扇貝',price:'₩15,000'},
+      {kr:'새우구이',cn:'烤蝦',price:'₩18,000'},
+      {kr:'조개찜',cn:'蒸貝類',price:'₩35,000'},
+      {kr:'해물라면',cn:'海鮮泡麵',price:'₩5,000'},
+    ] },
     { time:'14:00', title:'天空步道', detail:'', type:'attraction', lat:35.1587, lng:129.1870, mapQuery:'청사포+다릿돌전망대' },
     { time:'15:00-17:00', title:'SEALIFE 水族館', detail:'', type:'attraction', ticket:true, lat:35.1588, lng:129.1605, mapQuery:'씨라이프+부산아쿠아리움' },
-    { time:'17:00-18:30', title:'味贊王鹽烤肉（海雲台店）', detail:'', type:'food', lat:35.1592, lng:129.1580, kr:{ name:'미창왕소금구이 해운대점', addr:'부산광역시 해운대구 구남로' } },
+    { time:'17:00-18:30', title:'味贊王鹽烤肉（海雲台店）', detail:'鹽烤五花肉名店', type:'food', lat:35.1592, lng:129.1580, kr:{ name:'미창왕소금구이 해운대점', addr:'부산광역시 해운대구 구남로 24' }, menu:[
+      {kr:'왕소금구이 (1인)',cn:'王鹽烤肉（1人份）',price:'₩16,000'},
+      {kr:'항정살',cn:'松阪豬',price:'₩17,000'},
+      {kr:'갈매기살',cn:'橫隔膜肉',price:'₩16,000'},
+      {kr:'된장찌개',cn:'大醬湯',price:'₩7,000'},
+      {kr:'냉면',cn:'冷麵',price:'₩8,000'},
+      {kr:'공기밥',cn:'白飯',price:'₩1,000'},
+    ] },
     { time:'晚間', title:'逛街散步', detail:'Olive Young、大創、海雲台傳統市場', type:'shopping' }
   ],
   day4: [
     { time:'10:00', title:'民宿早餐', detail:'', type:'food' },
     { time:'10:00-11:00', title:'媽媽逛 Olive Young', detail:'小朋友玩沙沙 + 購物袋', type:'shopping', lat:35.1588, lng:129.1592, mapQuery:'올리브영+해운대' },
     { time:'11:10-12:00', title:'回民宿放東西、換衣服', detail:'', type:'transport' },
-    { time:'12:30-13:30', title:'Mipo-jib 生醃螃蟹', detail:'海雲台本店', type:'food', lat:35.1615, lng:129.1695, mapQuery:'미포집+해운대본점', kr:{ name:'미포집 해운대본점', addr:'부산광역시 해운대구 달맞이길' } },
+    { time:'12:30-13:30', title:'Mipo-jib 生醃螃蟹', detail:'海雲台本店', type:'food', lat:35.1615, lng:129.1695, mapQuery:'미포집+해운대본점', kr:{ name:'미포집 해운대본점', addr:'부산광역시 해운대구 달맞이길 117' }, menu:[
+      {kr:'간장게장 정식',cn:'醬油生醃螃蟹定食',price:'₩18,000'},
+      {kr:'양념게장 정식',cn:'辣醬生醃螃蟹定食',price:'₩18,000'},
+      {kr:'간장+양념 반반',cn:'醬油＋辣醬各半',price:'₩18,000'},
+      {kr:'전복솥밥',cn:'鮑魚石鍋飯',price:'₩5,000'},
+      {kr:'게장비빔밥',cn:'蟹醬拌飯',price:'₩3,000'},
+    ] },
     { time:'14:00-16:00', title:'Skyline Luge Busan', detail:'超好玩斜坡滑車!', type:'attraction', ticket:true, lat:35.1860, lng:129.2150, kr:{ name:'스카이라인 루지 부산', addr:'부산광역시 기장군 기장읍 기장해안로 205' } },
     { time:'16:30 起', title:'釜山樂天世界冒險樂園', detail:'順便逛樂天超市大買特買', type:'attraction', ticket:true, lat:35.1960, lng:129.2130, mapQuery:'롯데월드+어드벤처+부산', badges:['已訂票','購物'] },
-    { time:'晚餐', title:'Puradak 炸雞', detail:'', type:'food', lat:35.1590, lng:129.1590, mapQuery:'푸라닭+치킨+해운대' },
-    { time:'—', title:'Jinwoorin Haejang 韓牛料理', detail:'', type:'food', lat:35.1595, lng:129.1575, mapQuery:'진우린해장+부산+해운대' },
+    { time:'晚餐', title:'Puradak 炸雞', detail:'韓國人氣炸雞連鎖', type:'food', lat:35.1590, lng:129.1590, mapQuery:'푸라닭+치킨+해운대', menu:[
+      {kr:'고추바사삭',cn:'辣椒脆皮炸雞',price:'₩21,000'},
+      {kr:'블랙알리오',cn:'黑蒜炸雞',price:'₩22,000'},
+      {kr:'화이트갈릭',cn:'白蒜炸雞',price:'₩21,000'},
+      {kr:'크리스피 순살',cn:'脆皮去骨炸雞',price:'₩22,000'},
+      {kr:'치즈볼',cn:'起司球',price:'₩5,000'},
+    ] },
+    { time:'—', title:'Jinwoorin Haejang 韓牛料理', detail:'解酒湯專門店', type:'food', lat:35.1595, lng:129.1575, mapQuery:'진우린해장+부산+해운대', kr:{ name:'진우린해장', addr:'부산광역시 해운대구 구남로 29' }, menu:[
+      {kr:'한우국밥',cn:'韓牛湯飯',price:'₩12,000'},
+      {kr:'한우수육국밥',cn:'韓牛白切肉湯飯',price:'₩14,000'},
+      {kr:'한우내장탕',cn:'韓牛內臟湯',price:'₩13,000'},
+      {kr:'육회비빔밥',cn:'生牛肉拌飯',price:'₩15,000'},
+    ] },
     { time:'—', title:'海雲台傳統市場', detail:'', type:'shopping', lat:35.1600, lng:129.1580, mapQuery:'해운대전통시장' }
   ],
   day5: [
     { time:'09:30', title:'海雲台民宿早餐', detail:'', type:'food' },
-    { time:'—', title:'海雲台道地蔘雞湯', detail:'', type:'food', lat:35.1593, lng:129.1595, mapQuery:'도지삼계탕+해운대+부산' },
+    { time:'—', title:'海雲台道地蔘雞湯', detail:'', type:'food', lat:35.1593, lng:129.1595, mapQuery:'도지삼계탕+해운대+부산', kr:{ name:'해운대 도지삼계탕', addr:'부산광역시 해운대구 해운대해변로 264' }, menu:[
+      {kr:'삼계탕',cn:'人蔘雞湯',price:'₩17,000'},
+      {kr:'녹두삼계탕',cn:'綠豆人蔘雞湯',price:'₩18,000'},
+      {kr:'전복삼계탕',cn:'鮑魚人蔘雞湯',price:'₩22,000'},
+      {kr:'한방오리백숙',cn:'藥膳鴨湯',price:'₩55,000'},
+    ] },
     { time:'10:00-11:00', title:'媽媽逛 Olive Young', detail:'小朋友玩沙沙', type:'shopping' },
     { time:'11:10-12:00', title:'回民宿換衣服', detail:'12 點前退房 + 寄放行李', type:'transport' },
     { time:'12:30-13:30', title:'釜山 X the SKY', detail:'', type:'attraction', ticket:true, lat:35.1622, lng:129.1680, kr:{ name:'부산엑스더스카이', addr:'부산광역시 해운대구 달맞이길 30 엘시티 98-100층' } },
-    { time:'14:30', title:'水邊最高豬肉湯飯', detail:'', type:'food', lat:35.1590, lng:129.1590, mapQuery:'물가에최고돼지국밥+부산' },
+    { time:'14:30', title:'水邊最高豬肉湯飯', detail:'釜山代表美食', type:'food', lat:35.1590, lng:129.1590, mapQuery:'물가에최고돼지국밥+부산', kr:{ name:'물가에최고돼지국밥', addr:'부산광역시 해운대구 구남로 21' }, menu:[
+      {kr:'돼지국밥',cn:'豬肉湯飯',price:'₩9,000'},
+      {kr:'수육국밥',cn:'白切肉湯飯',price:'₩10,000'},
+      {kr:'내장국밥',cn:'內臟湯飯',price:'₩10,000'},
+      {kr:'섞어국밥',cn:'綜合湯飯',price:'₩10,000'},
+      {kr:'수육 (소)',cn:'白切肉（小）',price:'₩20,000'},
+    ] },
     { time:'—', title:'拿行李', detail:'', type:'transport' },
     { time:'15:30-17:00', title:'ARTE MUSEUM', detail:'', type:'attraction', ticket:true, lat:35.1958, lng:129.2128, mapQuery:'아르떼뮤지엄+부산' },
     { time:'18:00', title:'抵達金海機場', detail:'報到、安檢、免稅店', type:'transport', lat:35.1795, lng:128.9382, kr:{ name:'김해국제공항', addr:'부산광역시 강서구 공항진입로 108' } },
@@ -515,12 +769,24 @@ function renderDay(dayKey) {
 
   container.innerHTML = '';
 
-  // Reset order button
+  // Button row: reset + share
+  const btnRow = document.createElement('div');
+  btnRow.className = 'flex gap-2 mb-2';
+
   const resetBtn = document.createElement('button');
   resetBtn.className = 'reset-order-btn';
   resetBtn.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>重置順序';
   resetBtn.onclick = () => resetOrder(dayKey);
-  container.appendChild(resetBtn);
+  btnRow.appendChild(resetBtn);
+
+  const shareBtn = document.createElement('button');
+  shareBtn.className = 'reset-order-btn';
+  shareBtn.style.cssText = 'background:#e0f2fe;color:#0369a1';
+  shareBtn.innerHTML = '<i class="fa-solid fa-share-nodes fa-xs"></i> 分享行程';
+  shareBtn.onclick = () => shareDay(dayKey);
+  btnRow.appendChild(shareBtn);
+
+  container.appendChild(btnRow);
 
   // Timeline container
   const timeline = document.createElement('div');
@@ -532,9 +798,14 @@ function renderDay(dayKey) {
   const origStops = DAYS_ORIGINAL[dayKey];
 
   orderedStops.forEach((stop, renderIdx) => {
-    // Find this stop's original index in DAYS_ORIGINAL
-    const origIdx = origStops.indexOf(stop);
-    const idx = origIdx >= 0 ? origIdx : renderIdx;
+    // Insert button before each card (except first)
+    if (renderIdx > 0) {
+      const insertBtn = createInsertBtn(dayKey, renderIdx);
+      timeline.appendChild(insertBtn);
+    }
+
+    // Use the tracked original index
+    const idx = stop._origIdx != null ? stop._origIdx : renderIdx;
 
     // Render card
     const cardWrapper = renderStopCard(stop, idx, dayKey, orderedStops);
@@ -549,6 +820,10 @@ function renderDay(dayKey) {
       }
     }
   });
+
+  // Insert button at the end
+  const insertBtnEnd = createInsertBtn(dayKey, orderedStops.length);
+  timeline.appendChild(insertBtnEnd);
 
   // Attach drag listeners
   attachDragListeners(dayKey);
@@ -596,6 +871,9 @@ function renderStopCard(stop, idx, dayKey, orderedStops) {
     actionsHTML += '<div class="act-row">';
     if (hasMap) {
       const mq = encodeURIComponent((stop.mapQuery || (stop.kr ? stop.kr.name : '') || stop.title).replace(/\+/g,' '));
+      if (stop.lat && stop.lng) {
+        actionsHTML += `<button onclick="jumpToMap('${dayKey}',${stop.lat},${stop.lng})" class="act-btn" style="background:#f0fdf4;color:#15803d"><i class="fa-solid fa-map-location-dot fa-xs"></i> 地圖</button>`;
+      }
       actionsHTML += `<a href="https://www.google.com/maps/search/${mq}" target="_blank" class="act-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>`;
     }
     if (hasUber) {
@@ -615,9 +893,9 @@ function renderStopCard(stop, idx, dayKey, orderedStops) {
 
   if (hasNearby) {
     actionsHTML += `<div class="nearby-row">
-      <a href="https://www.google.com/maps/search/restaurants/@${stop.lat},${stop.lng},15z" target="_blank" class="nearby-btn" style="background:#f0fdf4;color:#15803d">🍽️ 附近餐廳</a>
-      <a href="https://www.google.com/maps/search/convenience+store/@${stop.lat},${stop.lng},15z" target="_blank" class="nearby-btn" style="background:#f0f9ff;color:#0369a1">🏪 便利店</a>
-      <a href="https://www.google.com/maps/search/attractions/@${stop.lat},${stop.lng},15z" target="_blank" class="nearby-btn" style="background:#fef2f2;color:#dc2626">📍 附近景點</a>
+      <a href="https://www.google.com/maps/search/restaurants/@${stop.lat},${stop.lng},15z" target="_blank" class="nearby-btn" style="background:#f0fdf4;color:#15803d"><i class="fa-solid fa-utensils fa-xs"></i> 附近餐廳</a>
+      <a href="https://www.google.com/maps/search/convenience+store/@${stop.lat},${stop.lng},15z" target="_blank" class="nearby-btn" style="background:#f0f9ff;color:#0369a1"><i class="fa-solid fa-store fa-xs"></i> 便利店</a>
+      <a href="https://www.google.com/maps/search/attractions/@${stop.lat},${stop.lng},15z" target="_blank" class="nearby-btn" style="background:#fef2f2;color:#dc2626"><i class="fa-solid fa-location-dot fa-xs"></i> 附近景點</a>
     </div>`;
   }
 
@@ -634,10 +912,17 @@ function renderStopCard(stop, idx, dayKey, orderedStops) {
         <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M7 2a2 2 0 110 4 2 2 0 010-4zm6 0a2 2 0 110 4 2 2 0 010-4zM7 8a2 2 0 110 4 2 2 0 010-4zm6 0a2 2 0 110 4 2 2 0 010-4zM7 14a2 2 0 110 4 2 2 0 010-4zm6 0a2 2 0 110 4 2 2 0 010-4z"/></svg>
       </div>
       <div class="${cardClass} flex-1">
-        <div class="text-[12px] font-bold ${timeColor}">${stop.time}</div>
-        <div class="text-[14px] ${titleWeight} ${titleColor}">${stop.title}</div>
-        ${stop.detail ? `<div class="text-[12px] text-slate-400">${stop.detail}</div>` : ''}
+        <div class="flex items-start justify-between gap-1">
+          <div class="flex-1 min-w-0">
+            <div class="text-[12px] font-bold ${timeColor}">${stop.time}</div>
+            <div class="text-[14px] ${titleWeight} ${titleColor}">${stop.title}</div>
+            ${stop.detail ? `<div class="text-[12px] text-slate-400">${stop.detail}</div>` : ''}
+          </div>
+          <button class="edit-trigger" onclick="openEditModal('${dayKey}',${idx})"><i class="fa-solid fa-pen fa-xs"></i></button>
+        </div>
         ${badgesHTML}
+        ${(stop.kr && (stop.type === 'food' || stop.type === 'hotel')) ? `<div class="addr-line"><i class="fa-solid fa-location-dot"></i><span><span class="font-kr">${stop.kr.name}</span><br>${stop.kr.addr}</span></div>` : ''}
+        ${stop.menu ? renderMenu(stop.menu) : ''}
         ${actionsHTML}
       </div>
     </div>
@@ -688,25 +973,40 @@ function attachDragListeners(dayKey) {
     return c.length;
   }
 
+  let dragOffsetY = 0;
+  let dragRect = null;
+
   function startDrag(card, y) {
     dragEl = card;
-    startY = y;
-    dragEl.classList.add('dragging');
-    document.body.classList.add('is-dragging');
+    dragRect = card.getBoundingClientRect();
+    dragOffsetY = y - dragRect.top;
+    
+    // Create placeholder with same height
     placeholder = document.createElement('div');
     placeholder.className = 'drag-placeholder';
-    placeholder.style.height = dragEl.offsetHeight + 'px';
-    dragEl.parentNode.insertBefore(placeholder, dragEl.nextSibling);
+    placeholder.style.height = dragRect.height + 'px';
+    dragEl.parentNode.insertBefore(placeholder, dragEl);
+
+    // Take card out of flow and fix to viewport
+    dragEl.classList.add('dragging');
+    document.body.classList.add('is-dragging');
+    dragEl.style.position = 'fixed';
+    dragEl.style.left = dragRect.left + 'px';
+    dragEl.style.width = dragRect.width + 'px';
+    dragEl.style.top = (y - dragOffsetY) + 'px';
+    dragEl.style.zIndex = '200';
+    dragEl.style.transform = 'scale(1.02)';
+    dragEl.style.pointerEvents = 'none';
+
     if (navigator.vibrate) navigator.vibrate(30);
-    showToast('拖曳中 — 移動到想要的位置後放手');
   }
 
   function moveDrag(y) {
     if (!dragEl) return;
-    const dy = y - startY;
-    dragEl.style.transform = `translateY(${dy}px) scale(1.02)`;
-    dragEl.style.zIndex = '20';
-    dragEl.style.position = 'relative';
+    // Move card with finger
+    dragEl.style.top = (y - dragOffsetY) + 'px';
+
+    // Move placeholder to correct insertion point
     const insertIdx = getCardInsertIdx(y);
     const otherCards = getCards().filter(c => c !== dragEl);
     if (placeholder && placeholder.parentNode) placeholder.remove();
@@ -715,6 +1015,11 @@ function attachDragListeners(dayKey) {
     } else {
       otherCards[insertIdx].parentNode.insertBefore(placeholder, otherCards[insertIdx]);
     }
+    
+    // Auto-scroll when near edges
+    const margin = 80;
+    if (y < margin) window.scrollBy(0, -8);
+    else if (y > window.innerHeight - margin) window.scrollBy(0, 8);
   }
 
   function endDrag(y) {
@@ -726,63 +1031,50 @@ function attachDragListeners(dayKey) {
     const dragIdx = parseInt(dragEl.dataset.idx);
     const insertAt = Math.min(insertIdx, others.length);
     const newOrder = [...others.slice(0, insertAt), dragIdx, ...others.slice(insertAt)];
-    const origStops = DAYS_ORIGINAL[dayKey];
-    DAYS[dayKey] = newOrder.map(i => origStops[i]);
+    // Only save order — don't mutate DAYS[dayKey], renderDay will apply savedOrder
     saveOrder(dayKey, newOrder);
 
-    // Clean up drag styles
+    // Clean up all fixed positioning styles
     dragEl.classList.remove('dragging');
     document.body.classList.remove('is-dragging');
-    dragEl.style.transform = '';
     dragEl.style.position = '';
+    dragEl.style.left = '';
+    dragEl.style.top = '';
+    dragEl.style.width = '';
+    dragEl.style.transform = '';
     dragEl.style.zIndex = '';
-
-    // DOM reorder instead of full re-render (much faster)
+    dragEl.style.pointerEvents = '';
     if (placeholder && placeholder.parentNode) placeholder.remove();
-
-    // Remove all transit bars
-    timeline.querySelectorAll('.transit-bar').forEach(b => b.remove());
-
-    // Reorder DOM nodes by newOrder
-    const allCards = getCards();
-    const cardsByIdx = {};
-    allCards.forEach(c => { cardsByIdx[c.dataset.idx] = c; });
-    newOrder.forEach(idx => {
-      const card = cardsByIdx[idx];
-      if (card) timeline.appendChild(card);
-    });
-
-    // Re-insert transit bars between consecutive stops with coords
-    const reorderedCards = getCards();
-    for (let i = 0; i < reorderedCards.length - 1; i++) {
-      const curIdx = parseInt(reorderedCards[i].dataset.idx);
-      const nextIdx = parseInt(reorderedCards[i + 1].dataset.idx);
-      const curStop = origStops[curIdx];
-      const nextStop = origStops[nextIdx];
-      if (curStop?.lat && curStop?.lng && nextStop?.lat && nextStop?.lng) {
-        const bar = renderTransitBar(curStop.lat, curStop.lng, nextStop.lat, nextStop.lng);
-        reorderedCards[i].after(bar);
-      }
-    }
-
     dragEl = null;
     placeholder = null;
+
+    // Full re-render to keep insert buttons and transit bars consistent
+    renderDay(dayKey);
     showToast('順序已更新');
   }
 
   // ---- Touch events (mobile) ----
+  let touchStartX = 0, touchStartY = 0;
   timeline.addEventListener('touchstart', e => {
     const handle = e.target.closest('[data-drag="true"]');
     if (!handle) return;
     const card = handle.closest('.tl-card');
     if (!card) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
     pressTimer = setTimeout(() => {
       startDrag(card, e.touches[0].clientY);
-    }, 300);
+    }, 350);
   }, { passive: true });
 
   timeline.addEventListener('touchmove', e => {
-    if (pressTimer && !dragEl) { clearTimeout(pressTimer); pressTimer = null; return; }
+    // Cancel press if finger moved more than 10px (scrolling)
+    if (pressTimer && !dragEl) {
+      const dx = Math.abs(e.touches[0].clientX - touchStartX);
+      const dy = Math.abs(e.touches[0].clientY - touchStartY);
+      if (dx > 10 || dy > 10) { clearTimeout(pressTimer); pressTimer = null; }
+      return;
+    }
     if (!dragEl) return;
     e.preventDefault();
     moveDrag(e.touches[0].clientY);
@@ -848,10 +1140,29 @@ document.querySelectorAll('.day-pill').forEach(pill => {
   });
 });
 
-// Restore last active page & day on reload
+// Restore last active page & day on reload, or auto-select today during trip
 (function restoreState() {
   const savedPage = sessionStorage.getItem('busan-active-page');
   const savedDay = sessionStorage.getItem('busan-active-day');
+
+  // Auto-detect if today is a trip day (5/12-5/16)
+  const now = new Date();
+  const tripDates = [
+    new Date('2026-05-12T00:00:00+09:00'),
+    new Date('2026-05-13T00:00:00+09:00'),
+    new Date('2026-05-14T00:00:00+09:00'),
+    new Date('2026-05-15T00:00:00+09:00'),
+    new Date('2026-05-16T00:00:00+09:00'),
+  ];
+  let autoDay = null;
+  for (let i = 0; i < tripDates.length; i++) {
+    const start = tripDates[i];
+    const end = new Date(start); end.setDate(end.getDate() + 1);
+    if (now >= start && now < end) { autoDay = 'day' + (i + 1); break; }
+  }
+
+  // If we're during the trip and no saved state, auto-jump to today
+  const targetDay = savedDay || autoDay;
   if (savedPage) {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -860,13 +1171,23 @@ document.querySelectorAll('.day-pill').forEach(pill => {
     if (navItem) navItem.classList.add('active');
     if (pageEl) pageEl.classList.add('active');
   }
-  if (savedDay) {
+  if (targetDay) {
     document.querySelectorAll('.day-pill').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.sub-panel').forEach(p => p.classList.remove('active'));
-    const pill = document.querySelector(`.day-pill[data-day="${savedDay}"]`);
-    const panel = document.getElementById(savedDay);
+    const pill = document.querySelector(`.day-pill[data-day="${targetDay}"]`);
+    const panel = document.getElementById(targetDay);
     if (pill) pill.classList.add('active');
     if (panel) panel.classList.add('active');
+    // Highlight today's pill with a subtle indicator
+    if (autoDay) {
+      const todayPill = document.querySelector(`.day-pill[data-day="${autoDay}"]`);
+      if (todayPill && !todayPill.querySelector('.today-dot')) {
+        const dot = document.createElement('span');
+        dot.className = 'today-dot';
+        dot.style.cssText = 'width:5px;height:5px;border-radius:50%;background:#ef4444;display:block;margin-top:1px';
+        todayPill.appendChild(dot);
+      }
+    }
   }
 })();
 
@@ -876,6 +1197,461 @@ function copyKr(el){const p=el.closest('.kr-popup');const t=p.querySelector('.kr
 
 // ===== Toast =====
 function showToast(msg){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:8px 18px;border-radius:12px;font-size:11px;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;text-align:center;max-width:85vw;box-shadow:0 4px 20px rgba(0,0,0,.25)';document.body.appendChild(t)}t.textContent=msg;t.style.opacity='1';clearTimeout(t._timer);t._timer=setTimeout(()=>{t.style.opacity='0'},2500)}
+
+// ===== Render Menu =====
+function renderMenu(items) {
+  if (!items || !items.length) return '';
+  let html = '<div class="menu-section"><div class="menu-toggle" onclick="toggleMenu(this)"><span><i class="fa-solid fa-utensils fa-xs"></i> 菜單</span><i class="fa-solid fa-chevron-down fa-xs"></i></div><div class="menu-items">';
+  items.forEach(m => {
+    html += `<div class="menu-item"><span><span class="mi-name font-kr">${m.kr}</span><span class="mi-cn">${m.cn}</span></span><span class="mi-price">${m.price}</span></div>`;
+  });
+  html += '</div></div>';
+  return html;
+}
+
+function toggleMenu(el) {
+  el.classList.toggle('open');
+  const items = el.nextElementSibling;
+  items.classList.toggle('show');
+}
+
+// ===== Insert Stop =====
+let pendingInsert = { dayKey: null, position: 0 };
+
+function createInsertBtn(dayKey, position) {
+  const btn = document.createElement('div');
+  btn.className = 'insert-btn';
+  btn.innerHTML = '<div class="insert-circle"><i class="fa-solid fa-plus fa-xs"></i></div>';
+  btn.onclick = () => openAddModal(dayKey, position);
+  return btn;
+}
+
+function openAddModal(dayKey, position) {
+  pendingInsert = { dayKey, position };
+  document.getElementById('add-time').value = '';
+  document.getElementById('add-title').value = '';
+  document.getElementById('add-detail').value = '';
+  document.getElementById('add-type').value = 'food';
+  document.getElementById('add-mapquery').value = '';
+  document.getElementById('add-modal-overlay').classList.add('show');
+  setTimeout(() => document.getElementById('add-title').focus(), 300);
+}
+
+function closeAddModal() {
+  document.getElementById('add-modal-overlay').classList.remove('show');
+}
+
+function confirmAddStop() {
+  const time = document.getElementById('add-time').value.trim() || '—';
+  const title = document.getElementById('add-title').value.trim();
+  const detail = document.getElementById('add-detail').value.trim();
+  const type = document.getElementById('add-type').value;
+  const mapQuery = document.getElementById('add-mapquery').value.trim();
+
+  if (!title) { showToast('請輸入標題'); return; }
+
+  const newStop = { time, title, detail, type, _custom: true };
+  if (mapQuery) newStop.mapQuery = mapQuery;
+
+  const { dayKey, position } = pendingInsert;
+
+  // Get current order
+  const savedOrder = loadSavedOrder(dayKey);
+  const origStops = DAYS_ORIGINAL[dayKey];
+
+  // Add to DAYS_ORIGINAL (append at end, track new index)
+  const newIdx = origStops.length;
+  origStops.push(newStop);
+  DAYS[dayKey].push(newStop);
+
+  // Insert into order at correct position
+  let currentOrder = savedOrder || origStops.slice(0, -1).map((_, i) => i);
+  currentOrder.splice(position, 0, newIdx);
+  saveOrder(dayKey, currentOrder);
+
+  // Also save custom stops to localStorage for persistence
+  saveCustomStops(dayKey);
+
+  // Sync to API
+  if (USE_API) {
+    apiSync('itinerary.php', 'POST', {
+      day: parseInt(dayKey.replace('day','')),
+      sort_order: position * 10,
+      time, title, detail, type,
+      map_query: mapQuery || ''
+    });
+  }
+
+  closeAddModal();
+  renderDay(dayKey);
+  showToast('已新增「' + title + '」');
+}
+
+// Save/load custom stops to localStorage
+function saveCustomStops(dayKey) {
+  const origStops = DAYS_ORIGINAL[dayKey];
+  const customs = origStops.filter(s => s._custom);
+  localStorage.setItem('busan-custom-' + dayKey, JSON.stringify(customs));
+}
+
+function loadCustomStops() {
+  ['day1','day2','day3','day4','day5'].forEach(dayKey => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('busan-custom-' + dayKey) || '[]');
+      if (saved.length) {
+        saved.forEach(s => {
+          s._custom = true;
+          DAYS_ORIGINAL[dayKey].push(s);
+          DAYS[dayKey].push(s);
+        });
+      }
+    } catch(e) {}
+  });
+}
+
+// ===== Edit Stop =====
+let pendingEdit = { dayKey: null, idx: 0 };
+
+function openEditModal(dayKey, idx) {
+  const stop = DAYS_ORIGINAL[dayKey][idx];
+  if (!stop) return;
+  pendingEdit = { dayKey, idx };
+  document.getElementById('edit-time').value = stop.time || '';
+  document.getElementById('edit-title').value = stop.title || '';
+  document.getElementById('edit-detail').value = stop.detail || '';
+  document.getElementById('edit-type').value = stop.type || 'transport';
+  document.getElementById('edit-mapquery').value = stop.mapQuery || '';
+
+  // Show delete button only for custom stops
+  const btnRow = document.getElementById('edit-btn-row');
+  const existingDel = btnRow.querySelector('.btn-delete');
+  if (existingDel) existingDel.remove();
+  if (stop._custom) {
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn-delete';
+    delBtn.innerHTML = '<i class="fa-solid fa-trash-can fa-xs"></i>';
+    delBtn.onclick = () => { closeEditModal(); deleteCustomStop(dayKey, idx); };
+    btnRow.insertBefore(delBtn, btnRow.firstChild);
+  }
+
+  document.getElementById('edit-modal-overlay').classList.add('show');
+  setTimeout(() => document.getElementById('edit-title').focus(), 300);
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal-overlay').classList.remove('show');
+}
+
+function confirmEditStop() {
+  const { dayKey, idx } = pendingEdit;
+  const stop = DAYS_ORIGINAL[dayKey][idx];
+  if (!stop) return;
+
+  const newTime = document.getElementById('edit-time').value.trim() || '—';
+  const newTitle = document.getElementById('edit-title').value.trim();
+  const newDetail = document.getElementById('edit-detail').value.trim();
+  const newType = document.getElementById('edit-type').value;
+  const newMapQuery = document.getElementById('edit-mapquery').value.trim();
+
+  if (!newTitle) { showToast('標題不能空白'); return; }
+
+  // Update data
+  stop.time = newTime;
+  stop.title = newTitle;
+  stop.detail = newDetail;
+  stop.type = newType;
+  if (newMapQuery) stop.mapQuery = newMapQuery;
+  else delete stop.mapQuery;
+
+  // Mark as edited for persistence
+  stop._edited = true;
+
+  // Sync to DAYS
+  DAYS[dayKey][idx] = JSON.parse(JSON.stringify(stop));
+
+  // Save edits to localStorage
+  saveEdits(dayKey);
+
+  // Save custom stops if it's custom
+  if (stop._custom) saveCustomStops(dayKey);
+
+  // Sync to API
+  if (USE_API && stop.dbId) {
+    apiSync('itinerary.php', 'PUT', {
+      id: stop.dbId,
+      time: newTime, title: newTitle, detail: newDetail, type: newType,
+      map_query: newMapQuery || ''
+    });
+  }
+
+  closeEditModal();
+  renderDay(dayKey);
+  showToast('已更新「' + newTitle + '」');
+}
+
+// Persist edits for non-custom (original) stops
+function saveEdits(dayKey) {
+  const origStops = DAYS_ORIGINAL[dayKey];
+  const edits = {};
+  origStops.forEach((s, i) => {
+    if (s._edited && !s._custom) {
+      edits[i] = { time: s.time, title: s.title, detail: s.detail, type: s.type, mapQuery: s.mapQuery || '' };
+    }
+  });
+  if (Object.keys(edits).length) {
+    localStorage.setItem('busan-edits-' + dayKey, JSON.stringify(edits));
+  }
+}
+
+function loadEdits() {
+  ['day1','day2','day3','day4','day5'].forEach(dayKey => {
+    try {
+      const edits = JSON.parse(localStorage.getItem('busan-edits-' + dayKey) || '{}');
+      for (const [i, e] of Object.entries(edits)) {
+        const idx = parseInt(i);
+        if (DAYS_ORIGINAL[dayKey][idx] && !DAYS_ORIGINAL[dayKey][idx]._custom) {
+          Object.assign(DAYS_ORIGINAL[dayKey][idx], e, { _edited: true });
+          Object.assign(DAYS[dayKey][idx], e, { _edited: true });
+        }
+      }
+    } catch(e) {}
+  });
+}
+
+loadEdits();
+
+// Delete custom stop
+function deleteCustomStop(dayKey, idx) {
+  if (!confirm('確定刪除這個行程？')) return;
+  const origStops = DAYS_ORIGINAL[dayKey];
+  const stop = origStops[idx];
+  if (!stop || !stop._custom) return;
+
+  // Remove from arrays
+  origStops.splice(idx, 1);
+  DAYS[dayKey] = JSON.parse(JSON.stringify(origStops));
+
+  // Fix saved order (remove idx, adjust higher indices)
+  const savedOrder = loadSavedOrder(dayKey);
+  if (savedOrder) {
+    const newOrder = savedOrder.filter(i => i !== idx).map(i => i > idx ? i - 1 : i);
+    saveOrder(dayKey, newOrder);
+  }
+
+  saveCustomStops(dayKey);
+  renderDay(dayKey);
+  showToast('已刪除');
+}
+
+// Load custom stops before rendering
+loadCustomStops();
+
+// ===== Share Day =====
+function shareDay(dayKey) {
+  const dayNum = dayKey.replace('day','');
+  const dates = ['5/12(二)','5/13(三)','5/14(四)','5/15(五)','5/16(六)'];
+  const stops = DAYS[dayKey];
+  const savedOrder = loadSavedOrder(dayKey);
+  const ordered = savedOrder ? savedOrder.map(i => stops[i]) : stops;
+  let text = `🇰🇷 釜山旅遊 Day ${dayNum} — ${dates[dayNum-1]}\n\n`;
+  ordered.forEach(s => {
+    const icon = s.type === 'food' ? '🍽' : s.type === 'attraction' ? '🎯' : s.type === 'shopping' ? '🛍' : s.type === 'hotel' ? '🏨' : s.type === 'flight' ? '✈️' : '🚗';
+    text += `${s.time} ${icon} ${s.title}`;
+    if (s.detail) text += ` — ${s.detail}`;
+    text += '\n';
+  });
+  if (navigator.share) {
+    navigator.share({ title: `釜山 Day ${dayNum}`, text }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text).then(() => showToast('已複製到剪貼簿！')).catch(() => showToast('複製失敗'));
+  }
+}
+
+// ===== Map View =====
+const MAP_COLORS = {
+  food:'#ef4444', attraction:'#22c55e', shopping:'#3b82f6',
+  transport:'#f59e0b', hotel:'#8b5cf6', flight:'#0ea5e9'
+};
+const MAP_LABELS = {
+  food:'餐飲', attraction:'觀光', shopping:'購物',
+  transport:'交通', hotel:'住宿', flight:'航班'
+};
+const dayMaps = {};
+
+function switchView(dayKey, view, btn) {
+  // Toggle buttons
+  btn.parentElement.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const listView = document.getElementById(dayKey + '-list-view');
+  const mapView = document.getElementById(dayKey + '-map-view');
+  
+  if (view === 'map') {
+    listView.style.display = 'none';
+    mapView.style.display = 'block';
+    // Init map on first show
+    if (!dayMaps[dayKey]) {
+      setTimeout(() => initDayMap(dayKey), 100);
+    } else {
+      setTimeout(() => dayMaps[dayKey].invalidateSize(), 100);
+    }
+  } else {
+    listView.style.display = '';
+    mapView.style.display = 'none';
+  }
+}
+
+function initDayMap(dayKey) {
+  const mapEl = document.getElementById(dayKey + '-map');
+  const carouselEl = document.getElementById(dayKey + '-carousel');
+  if (!mapEl || dayMaps[dayKey]) return;
+
+  const stops = DAYS_ORIGINAL[dayKey];
+  const savedOrder = loadSavedOrder(dayKey);
+  const ordered = savedOrder ? savedOrder.map(i => stops[i]) : stops;
+  const withCoords = ordered.filter(s => s.lat && s.lng);
+
+  if (!withCoords.length) {
+    mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8;font-size:14px">此天行程無座標資料</div>';
+    return;
+  }
+
+  const map = L.map(mapEl, { zoomControl: false });
+  L.control.zoom({ position: 'topright' }).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap', maxZoom: 19
+  }).addTo(map);
+
+  const bounds = [];
+  const markerRefs = [];
+  let stopNum = 0;
+
+  ordered.forEach((stop) => {
+    if (!stop.lat || !stop.lng) return;
+    stopNum++;
+    const color = MAP_COLORS[stop.type] || '#64748b';
+    const icon = L.divIcon({
+      className: '',
+      html: `<div class="numbered-marker" style="background:${color}">${stopNum}</div>`,
+      iconSize: [28, 28], iconAnchor: [14, 14]
+    });
+    const marker = L.marker([stop.lat, stop.lng], { icon }).addTo(map);
+    bounds.push([stop.lat, stop.lng]);
+    markerRefs.push({ marker, stop, num: stopNum });
+  });
+
+  if (bounds.length > 1) {
+    L.polyline(bounds, { color: '#38bdf8', weight: 3, opacity: 0.5, dashArray: '8 6' }).addTo(map);
+  }
+  map.fitBounds(bounds, { padding: [30, 30] });
+
+  // Build carousel cards
+  const cardEls = [];
+  ordered.forEach((stop) => {
+    if (!stop.lat && !stop.lng) return;
+    const hasCoords = stop.lat && stop.lng;
+    const mRef = hasCoords ? markerRefs.find(m => m.stop === stop) : null;
+    const num = mRef ? mRef.num : '';
+    const color = MAP_COLORS[stop.type] || '#64748b';
+    const mapQ = encodeURIComponent((stop.mapQuery || (stop.kr ? stop.kr.name : '') || stop.title).replace(/\+/g, ' '));
+    const badgeStyle = stop.type === 'food' ? 'background:rgba(239,68,68,.2);color:#fca5a5' :
+                       stop.type === 'shopping' ? 'background:rgba(59,130,246,.2);color:#93c5fd' :
+                       stop.type === 'attraction' ? 'background:rgba(34,197,94,.2);color:#86efac' :
+                       stop.type === 'hotel' ? 'background:rgba(139,92,246,.2);color:#c4b5fd' :
+                       stop.type === 'flight' ? 'background:rgba(14,165,233,.2);color:#7dd3fc' :
+                       'background:rgba(245,158,11,.2);color:#fcd34d';
+
+    const card = document.createElement('div');
+    card.className = 'map-card';
+    card.innerHTML = `
+      <div class="mc-head">
+        <div class="mc-time">${stop.time}</div>
+        ${num ? `<div class="mc-num" style="background:${color}">${num}</div>` : ''}
+      </div>
+      <div class="mc-title">${stop.title}</div>
+      ${stop.kr ? `<div class="mc-kr">${stop.kr.name}</div><div class="mc-addr">${stop.kr.addr}</div>` : ''}
+      <span class="mc-badge" style="${badgeStyle}">${MAP_LABELS[stop.type] || stop.type}</span>
+      ${hasCoords ? `<br><a href="https://www.google.com/maps/search/${mapQ}" target="_blank" class="mc-nav" onclick="event.stopPropagation()"><i class="fa-solid fa-diamond-turn-right fa-xs"></i> Google Maps 導航</a>` : ''}
+    `;
+    if (hasCoords) {
+      card.addEventListener('click', () => {
+        map.setView([stop.lat, stop.lng], 16, { animate: true });
+        cardEls.forEach(c => c.classList.remove('mc-active'));
+        card.classList.add('mc-active');
+        if (mRef) mRef.marker.openPopup();
+      });
+    }
+    // Also add simple popup to markers
+    if (mRef) {
+      mRef.marker.bindPopup(`<b>${num}. ${stop.title}</b>${stop.kr ? '<br><small>'+stop.kr.name+'</small>' : ''}`, { maxWidth: 200 });
+      mRef.marker.on('click', () => {
+        cardEls.forEach(c => c.classList.remove('mc-active'));
+        card.classList.add('mc-active');
+        card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      });
+    }
+    carouselEl.appendChild(card);
+    cardEls.push(card);
+  });
+
+  // Legend
+  const legend = document.createElement('div');
+  legend.className = 'map-legend';
+  [...new Set(withCoords.map(s => s.type))].forEach(t => {
+    legend.innerHTML += `<div class="map-legend-item"><div class="map-legend-dot" style="background:${MAP_COLORS[t]||'#64748b'}"></div><span>${MAP_LABELS[t]||t}</span></div>`;
+  });
+  mapEl.appendChild(legend);
+
+  dayMaps[dayKey] = map;
+}
+
+// ===== Jump to Map =====
+function jumpToMap(dayKey, lat, lng) {
+  // Switch to map view
+  const mapView = document.getElementById(dayKey + '-map-view');
+  const listView = document.getElementById(dayKey + '-list-view');
+  const toggleBtns = mapView.closest('.sub-panel').querySelectorAll('.view-toggle-btn');
+  
+  listView.style.display = 'none';
+  mapView.style.display = 'block';
+  toggleBtns.forEach(b => b.classList.remove('active'));
+  toggleBtns[1].classList.add('active'); // "地圖" button
+
+  // Init map if needed, then fly to location
+  if (!dayMaps[dayKey]) {
+    setTimeout(() => {
+      initDayMap(dayKey);
+      setTimeout(() => {
+        dayMaps[dayKey].setView([lat, lng], 16, { animate: true });
+        // Highlight matching carousel card
+        highlightCarouselCard(dayKey, lat, lng);
+      }, 300);
+    }, 100);
+  } else {
+    setTimeout(() => {
+      dayMaps[dayKey].invalidateSize();
+      dayMaps[dayKey].setView([lat, lng], 16, { animate: true });
+      highlightCarouselCard(dayKey, lat, lng);
+    }, 100);
+  }
+}
+
+function highlightCarouselCard(dayKey, lat, lng) {
+  const carousel = document.getElementById(dayKey + '-carousel');
+  if (!carousel) return;
+  const cards = carousel.querySelectorAll('.map-card');
+  cards.forEach(c => c.classList.remove('mc-active'));
+  // Find the card for this stop by matching marker data
+  const stops = DAYS_ORIGINAL[dayKey];
+  const savedOrder = loadSavedOrder(dayKey);
+  const ordered = savedOrder ? savedOrder.map(i => stops[i]) : stops;
+  const coordStops = ordered.filter(s => s.lat && s.lng);
+  const matchIdx = coordStops.findIndex(s => Math.abs(s.lat - lat) < 0.001 && Math.abs(s.lng - lng) < 0.001);
+  if (matchIdx >= 0 && cards[matchIdx]) {
+    cards[matchIdx].classList.add('mc-active');
+    cards[matchIdx].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }
+}
 
 // ===== Countdown =====
 function updateCountdown(){const t=new Date('2026-05-12T13:00:00+08:00'),n=new Date(),d=t-n,el=document.getElementById('countdown');if(d<=0){el.textContent=n<=new Date('2026-05-16T22:10:00+08:00')?'旅行中!':'旅程已結束';return}const days=Math.floor(d/864e5),hrs=Math.floor((d%864e5)/36e5);el.textContent='倒數 '+days+' 天 '+hrs+' 時'}

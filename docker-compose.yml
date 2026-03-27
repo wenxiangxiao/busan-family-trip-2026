@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  php:
+    build: .
+    container_name: busan-trip-php
+    ports:
+      - "3463:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - mysql
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: busan-trip-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: busan2026
+      MYSQL_DATABASE: busan_trip
+      MYSQL_USER: busan_user
+      MYSQL_PASSWORD: busan2026
+    ports:
+      - "3309:3306"
+    volumes:
+      - busan_mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
+volumes:
+  busan_mysql_data:

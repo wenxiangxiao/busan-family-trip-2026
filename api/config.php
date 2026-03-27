@@ -5,10 +5,10 @@
  */
 
 // 資料庫連線
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'busan_trip');    // 在 cPanel MySQL 建立
-define('DB_USER', 'busan_user');    // cPanel 中建立的 DB 使用者
-define('DB_PASS', '');              // 部署時填入密碼
+define('DB_HOST', 'mysql');
+define('DB_NAME', 'busan_trip');
+define('DB_USER', 'busan_user');
+define('DB_PASS', 'busan2026');
 
 // CORS（前端網址，部署時改成正式網域）
 define('ALLOWED_ORIGIN', '*');
