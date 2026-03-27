@@ -52,9 +52,11 @@ body{font-family:'Noto Sans TC','Outfit',sans-serif;padding-bottom:calc(72px + e
 /* Header compact */
 .header-bar{background:linear-gradient(135deg,#0c4a6e,#0369a1);position:sticky;top:0;z-index:50;padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
 /* Drag handle & dragging state */
-.drag-handle{cursor:grab;touch-action:none;color:#cbd5e1;padding:4px 6px 4px 2px;display:flex;align-items:center;flex-shrink:0}
+.drag-handle{cursor:grab;touch-action:none;color:#cbd5e1;padding:4px 6px 4px 2px;display:flex;align-items:center;flex-shrink:0;user-select:none;-webkit-user-select:none}
 .drag-handle:active{cursor:grabbing}
-.dragging{opacity:0.8;box-shadow:0 8px 25px rgba(0,0,0,.15);z-index:10;transform:scale(1.01);}
+.dragging{opacity:0.8;box-shadow:0 8px 25px rgba(0,0,0,.15);z-index:10;transform:scale(1.01);user-select:none;-webkit-user-select:none}
+.dragging *{user-select:none;-webkit-user-select:none}
+body.is-dragging,body.is-dragging *{user-select:none!important;-webkit-user-select:none!important;-webkit-touch-callout:none!important}
 .drag-placeholder{border:2px dashed #cbd5e1;border-radius:12px;background:#f8fafc;margin-bottom:0}
 /* Transit bar */
 .transit-bar{display:flex;align-items:center;gap:8px;padding:6px 8px;margin:2px 0;cursor:pointer;border-radius:8px;transition:background .15s}
@@ -663,6 +665,7 @@ function attachDragListeners(dayKey) {
 
       startY = e.touches[0].clientY;
       dragEl.classList.add('dragging');
+      document.body.classList.add('is-dragging');
 
       // Create placeholder
       placeholder = document.createElement('div');
@@ -728,6 +731,7 @@ function attachDragListeners(dayKey) {
 
     // Clean up
     dragEl.classList.remove('dragging');
+    document.body.classList.remove('is-dragging');
     dragEl.style.transform = '';
     dragEl.style.position = '';
     dragEl.style.zIndex = '';
