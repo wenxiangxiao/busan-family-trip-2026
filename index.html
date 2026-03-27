@@ -734,15 +734,44 @@ function attachDragListeners(dayKey) {
     const origStops = DAYS_ORIGINAL[dayKey];
     DAYS[dayKey] = newOrder.map(i => origStops[i]);
     saveOrder(dayKey, newOrder);
+
+    // Clean up drag styles
     dragEl.classList.remove('dragging');
     document.body.classList.remove('is-dragging');
     dragEl.style.transform = '';
     dragEl.style.position = '';
     dragEl.style.zIndex = '';
+
+    // DOM reorder instead of full re-render (much faster)
     if (placeholder && placeholder.parentNode) placeholder.remove();
+
+    // Remove all transit bars
+    timeline.querySelectorAll('.transit-bar').forEach(b => b.remove());
+
+    // Reorder DOM nodes by newOrder
+    const allCards = getCards();
+    const cardsByIdx = {};
+    allCards.forEach(c => { cardsByIdx[c.dataset.idx] = c; });
+    newOrder.forEach(idx => {
+      const card = cardsByIdx[idx];
+      if (card) timeline.appendChild(card);
+    });
+
+    // Re-insert transit bars between consecutive stops with coords
+    const reorderedCards = getCards();
+    for (let i = 0; i < reorderedCards.length - 1; i++) {
+      const curIdx = parseInt(reorderedCards[i].dataset.idx);
+      const nextIdx = parseInt(reorderedCards[i + 1].dataset.idx);
+      const curStop = origStops[curIdx];
+      const nextStop = origStops[nextIdx];
+      if (curStop?.lat && curStop?.lng && nextStop?.lat && nextStop?.lng) {
+        const bar = renderTransitBar(curStop.lat, curStop.lng, nextStop.lat, nextStop.lng);
+        reorderedCards[i].after(bar);
+      }
+    }
+
     dragEl = null;
     placeholder = null;
-    renderDay(dayKey);
     showToast('順序已更新');
   }
 
