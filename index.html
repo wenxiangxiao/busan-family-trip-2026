@@ -670,7 +670,7 @@ function openRoute(fromLat, fromLng, toLat, toLng) {
   window.open(url, '_blank');
 }
 
-// ===== DRAG TO REORDER =====
+// ===== DRAG TO REORDER (Touch + Mouse) =====
 function attachDragListeners(dayKey) {
   const timeline = document.getElementById(dayKey + '-timeline');
   if (!timeline) return;
@@ -678,7 +678,7 @@ function attachDragListeners(dayKey) {
   let dragEl = null;
   let startY = 0;
   let placeholder = null;
-  let dragStartOrder = []; // snapshot of indices at drag start
+  let pressTimer = null;
 
   function getCards() {
     return Array.from(timeline.querySelectorAll('.tl-card'));
@@ -693,55 +693,25 @@ function attachDragListeners(dayKey) {
     return c.length;
   }
 
-  // Long-press detection for drag (300ms hold)
-  let pressTimer = null;
-  let pressHandle = null;
+  function startDrag(card, y) {
+    dragEl = card;
+    startY = y;
+    dragEl.classList.add('dragging');
+    document.body.classList.add('is-dragging');
+    placeholder = document.createElement('div');
+    placeholder.className = 'drag-placeholder';
+    placeholder.style.height = dragEl.offsetHeight + 'px';
+    dragEl.parentNode.insertBefore(placeholder, dragEl.nextSibling);
+    if (navigator.vibrate) navigator.vibrate(30);
+    showToast('拖曳中 — 移動到想要的位置後放手');
+  }
 
-  timeline.addEventListener('touchstart', e => {
-    const handle = e.target.closest('[data-drag="true"]');
-    if (!handle) return;
-    pressHandle = handle;
-
-    pressTimer = setTimeout(() => {
-      dragEl = pressHandle.closest('.tl-card');
-      if (!dragEl) return;
-
-      // Snapshot current order
-      dragStartOrder = getCards().map(c => parseInt(c.dataset.idx));
-
-      startY = e.touches[0].clientY;
-      dragEl.classList.add('dragging');
-      document.body.classList.add('is-dragging');
-
-      // Create placeholder
-      placeholder = document.createElement('div');
-      placeholder.className = 'drag-placeholder';
-      placeholder.style.height = dragEl.offsetHeight + 'px';
-      dragEl.parentNode.insertBefore(placeholder, dragEl.nextSibling);
-
-      // Haptic feedback (if available)
-      if (navigator.vibrate) navigator.vibrate(30);
-      showToast('拖曳中 — 移動到想要的位置後放手');
-    }, 300);
-  }, { passive: true });
-
-  timeline.addEventListener('touchmove', e => {
-    // Cancel long-press if finger moves before timer fires
-    if (pressTimer && !dragEl) {
-      clearTimeout(pressTimer);
-      pressTimer = null;
-      return;
-    }
+  function moveDrag(y) {
     if (!dragEl) return;
-    e.preventDefault();
-
-    const y = e.touches[0].clientY;
     const dy = y - startY;
     dragEl.style.transform = `translateY(${dy}px) scale(1.02)`;
     dragEl.style.zIndex = '20';
     dragEl.style.position = 'relative';
-
-    // Move placeholder to indicate drop position
     const insertIdx = getCardInsertIdx(y);
     const otherCards = getCards().filter(c => c !== dragEl);
     if (placeholder && placeholder.parentNode) placeholder.remove();
@@ -750,32 +720,20 @@ function attachDragListeners(dayKey) {
     } else {
       otherCards[insertIdx].parentNode.insertBefore(placeholder, otherCards[insertIdx]);
     }
-  }, { passive: false });
+  }
 
-  timeline.addEventListener('touchend', e => {
+  function endDrag(y) {
     clearTimeout(pressTimer);
     pressTimer = null;
-
     if (!dragEl) return;
-
-    // Calculate new order based on where placeholder is
-    const y = e.changedTouches[0].clientY;
     const insertIdx = getCardInsertIdx(y);
-
-    // Build new index order
     const others = getCards().filter(c => c !== dragEl).map(c => parseInt(c.dataset.idx));
     const dragIdx = parseInt(dragEl.dataset.idx);
     const insertAt = Math.min(insertIdx, others.length);
     const newOrder = [...others.slice(0, insertAt), dragIdx, ...others.slice(insertAt)];
-
-    // Reorder the DAYS data
     const origStops = DAYS_ORIGINAL[dayKey];
     DAYS[dayKey] = newOrder.map(i => origStops[i]);
-
-    // Save
     saveOrder(dayKey, newOrder);
-
-    // Clean up
     dragEl.classList.remove('dragging');
     document.body.classList.remove('is-dragging');
     dragEl.style.transform = '';
@@ -784,11 +742,55 @@ function attachDragListeners(dayKey) {
     if (placeholder && placeholder.parentNode) placeholder.remove();
     dragEl = null;
     placeholder = null;
-
-    // Re-render with new order
     renderDay(dayKey);
     showToast('順序已更新');
+  }
+
+  // ---- Touch events (mobile) ----
+  timeline.addEventListener('touchstart', e => {
+    const handle = e.target.closest('[data-drag="true"]');
+    if (!handle) return;
+    const card = handle.closest('.tl-card');
+    if (!card) return;
+    pressTimer = setTimeout(() => {
+      startDrag(card, e.touches[0].clientY);
+    }, 300);
   }, { passive: true });
+
+  timeline.addEventListener('touchmove', e => {
+    if (pressTimer && !dragEl) { clearTimeout(pressTimer); pressTimer = null; return; }
+    if (!dragEl) return;
+    e.preventDefault();
+    moveDrag(e.touches[0].clientY);
+  }, { passive: false });
+
+  timeline.addEventListener('touchend', e => {
+    clearTimeout(pressTimer); pressTimer = null;
+    if (!dragEl) return;
+    endDrag(e.changedTouches[0].clientY);
+  }, { passive: true });
+
+  // ---- Mouse events (desktop) ----
+  timeline.addEventListener('mousedown', e => {
+    const handle = e.target.closest('[data-drag="true"]');
+    if (!handle) return;
+    const card = handle.closest('.tl-card');
+    if (!card) return;
+    e.preventDefault();
+    startDrag(card, e.clientY);
+
+    function onMouseMove(ev) {
+      ev.preventDefault();
+      moveDrag(ev.clientY);
+    }
+    function onMouseUp(ev) {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      endDrag(ev.clientY);
+    }
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
 }
 
 // ===== RENDER ALL DAYS ON LOAD =====
