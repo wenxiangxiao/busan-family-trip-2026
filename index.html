@@ -485,14 +485,21 @@ function renderDay(dayKey) {
   timeline.id = dayKey + '-timeline';
   container.appendChild(timeline);
 
-  orderedStops.forEach((stop, idx) => {
+  // Find original index for each stop
+  const origStops = DAYS_ORIGINAL[dayKey];
+
+  orderedStops.forEach((stop, renderIdx) => {
+    // Find this stop's original index in DAYS_ORIGINAL
+    const origIdx = origStops.indexOf(stop);
+    const idx = origIdx >= 0 ? origIdx : renderIdx;
+
     // Render card
     const cardWrapper = renderStopCard(stop, idx, dayKey, orderedStops);
     timeline.appendChild(cardWrapper);
 
     // Transit bar between stops with coords
-    if (idx < orderedStops.length - 1) {
-      const nextStop = orderedStops[idx + 1];
+    if (renderIdx < orderedStops.length - 1) {
+      const nextStop = orderedStops[renderIdx + 1];
       if (stop.lat && stop.lng && nextStop.lat && nextStop.lng) {
         const bar = renderTransitBar(stop.lat, stop.lng, nextStop.lat, nextStop.lng);
         timeline.appendChild(bar);
@@ -622,16 +629,15 @@ function attachDragListeners(dayKey) {
 
   let dragEl = null;
   let startY = 0;
-  let startIdx = 0;
   let placeholder = null;
-  let cards = [];
+  let dragStartOrder = []; // snapshot of indices at drag start
 
   function getCards() {
     return Array.from(timeline.querySelectorAll('.tl-card'));
   }
 
-  function getCardAtY(y) {
-    const c = getCards();
+  function getCardInsertIdx(y) {
+    const c = getCards().filter(el => el !== dragEl);
     for (let i = 0; i < c.length; i++) {
       const rect = c[i].getBoundingClientRect();
       if (y < rect.top + rect.height / 2) return i;
@@ -639,65 +645,85 @@ function attachDragListeners(dayKey) {
     return c.length;
   }
 
+  // Long-press detection for drag (300ms hold)
+  let pressTimer = null;
+  let pressHandle = null;
+
   timeline.addEventListener('touchstart', e => {
     const handle = e.target.closest('[data-drag="true"]');
     if (!handle) return;
-    dragEl = handle.closest('.tl-card');
-    if (!dragEl) return;
-    cards = getCards();
-    startIdx = cards.indexOf(dragEl);
-    startY = e.touches[0].clientY;
-    dragEl.classList.add('dragging');
-    dragEl.style.position = 'relative';
-    // Create placeholder
-    placeholder = document.createElement('div');
-    placeholder.className = 'drag-placeholder';
-    placeholder.style.height = dragEl.offsetHeight + 'px';
-    e.preventDefault();
-  }, { passive: false });
+    pressHandle = handle;
+
+    pressTimer = setTimeout(() => {
+      dragEl = pressHandle.closest('.tl-card');
+      if (!dragEl) return;
+
+      // Snapshot current order
+      dragStartOrder = getCards().map(c => parseInt(c.dataset.idx));
+
+      startY = e.touches[0].clientY;
+      dragEl.classList.add('dragging');
+
+      // Create placeholder
+      placeholder = document.createElement('div');
+      placeholder.className = 'drag-placeholder';
+      placeholder.style.height = dragEl.offsetHeight + 'px';
+      dragEl.parentNode.insertBefore(placeholder, dragEl.nextSibling);
+
+      // Haptic feedback (if available)
+      if (navigator.vibrate) navigator.vibrate(30);
+      showToast('拖曳中 — 移動到想要的位置後放手');
+    }, 300);
+  }, { passive: true });
 
   timeline.addEventListener('touchmove', e => {
+    // Cancel long-press if finger moves before timer fires
+    if (pressTimer && !dragEl) {
+      clearTimeout(pressTimer);
+      pressTimer = null;
+      return;
+    }
     if (!dragEl) return;
     e.preventDefault();
+
     const y = e.touches[0].clientY;
     const dy = y - startY;
-    dragEl.style.transform = `translateY(${dy}px)`;
+    dragEl.style.transform = `translateY(${dy}px) scale(1.02)`;
     dragEl.style.zIndex = '20';
+    dragEl.style.position = 'relative';
 
-    // Determine insert position
-    const insertIdx = getCardAtY(y);
-    const currentCards = getCards().filter(c => c !== dragEl);
-    if (placeholder.parentNode) placeholder.remove();
-    if (insertIdx >= currentCards.length) {
+    // Move placeholder to indicate drop position
+    const insertIdx = getCardInsertIdx(y);
+    const otherCards = getCards().filter(c => c !== dragEl);
+    if (placeholder && placeholder.parentNode) placeholder.remove();
+    if (insertIdx >= otherCards.length) {
       timeline.appendChild(placeholder);
     } else {
-      // Insert before insertIdx card accounting for transit bars
-      const targetCard = currentCards[insertIdx];
-      targetCard.parentNode.insertBefore(placeholder, targetCard);
+      otherCards[insertIdx].parentNode.insertBefore(placeholder, otherCards[insertIdx]);
     }
   }, { passive: false });
 
   timeline.addEventListener('touchend', e => {
+    clearTimeout(pressTimer);
+    pressTimer = null;
+
     if (!dragEl) return;
+
+    // Calculate new order based on where placeholder is
     const y = e.changedTouches[0].clientY;
-    const finalInsert = getCardAtY(y);
-    const currentCards = getCards().filter(c => c !== dragEl);
+    const insertIdx = getCardInsertIdx(y);
 
-    // Rebuild order
-    let newOrder = [];
-    const origCards = getCards();
-    // Get all cards except dragEl in their current rendered order
-    const others = origCards.filter(c => c !== dragEl);
-    const othersOrigIdx = others.map(c => parseInt(c.dataset.idx));
+    // Build new index order
+    const others = getCards().filter(c => c !== dragEl).map(c => parseInt(c.dataset.idx));
+    const dragIdx = parseInt(dragEl.dataset.idx);
+    const insertAt = Math.min(insertIdx, others.length);
+    const newOrder = [...others.slice(0, insertAt), dragIdx, ...others.slice(insertAt)];
 
-    // Insert dragEl at finalInsert
-    const dragOrigIdx = parseInt(dragEl.dataset.idx);
-    const insertAt = Math.min(finalInsert, others.length);
-    const before = othersOrigIdx.slice(0, insertAt);
-    const after = othersOrigIdx.slice(insertAt);
-    newOrder = [...before, dragOrigIdx, ...after];
+    // Reorder the DAYS data
+    const origStops = DAYS_ORIGINAL[dayKey];
+    DAYS[dayKey] = newOrder.map(i => origStops[i]);
 
-    // Save new order
+    // Save
     saveOrder(dayKey, newOrder);
 
     // Clean up
@@ -705,11 +731,11 @@ function attachDragListeners(dayKey) {
     dragEl.style.transform = '';
     dragEl.style.position = '';
     dragEl.style.zIndex = '';
-    if (placeholder.parentNode) placeholder.remove();
+    if (placeholder && placeholder.parentNode) placeholder.remove();
     dragEl = null;
     placeholder = null;
 
-    // Re-render
+    // Re-render with new order
     renderDay(dayKey);
     showToast('順序已更新');
   }, { passive: true });
