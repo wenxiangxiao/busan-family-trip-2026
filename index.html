@@ -806,6 +806,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
     item.classList.add('active');
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(target).classList.add('active');
+    sessionStorage.setItem('busan-active-page', target);
     window.scrollTo({top:0,behavior:'smooth'});
   });
 });
@@ -818,9 +819,32 @@ document.querySelectorAll('.day-pill').forEach(pill => {
     pill.classList.add('active');
     document.querySelectorAll('.sub-panel').forEach(p => p.classList.remove('active'));
     document.getElementById(target).classList.add('active');
+    sessionStorage.setItem('busan-active-day', target);
     window.scrollTo({top:0,behavior:'smooth'});
   });
 });
+
+// Restore last active page & day on reload
+(function restoreState() {
+  const savedPage = sessionStorage.getItem('busan-active-page');
+  const savedDay = sessionStorage.getItem('busan-active-day');
+  if (savedPage) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const navItem = document.querySelector(`.nav-item[data-page="${savedPage}"]`);
+    const pageEl = document.getElementById(savedPage);
+    if (navItem) navItem.classList.add('active');
+    if (pageEl) pageEl.classList.add('active');
+  }
+  if (savedDay) {
+    document.querySelectorAll('.day-pill').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sub-panel').forEach(p => p.classList.remove('active'));
+    const pill = document.querySelector(`.day-pill[data-day="${savedDay}"]`);
+    const panel = document.getElementById(savedDay);
+    if (pill) pill.classList.add('active');
+    if (panel) panel.classList.add('active');
+  }
+})();
 
 // ===== KR Popup =====
 function toggleKr(btn){const c=btn.closest('.tl-card');if(c){const p=c.querySelector('.kr-popup');if(p)p.classList.toggle('show')}}
