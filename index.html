@@ -874,7 +874,10 @@ function renderStopCard(stop, idx, dayKey, orderedStops) {
       if (stop.lat && stop.lng) {
         actionsHTML += `<button onclick="jumpToMap('${dayKey}',${stop.lat},${stop.lng})" class="act-btn" style="background:#f0fdf4;color:#15803d"><i class="fa-solid fa-map-location-dot fa-xs"></i> 地圖</button>`;
       }
-      actionsHTML += `<a href="https://www.google.com/maps/search/${mq}" target="_blank" class="act-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Map</a>`;
+      const naverHref = (stop.lat && stop.lng)
+        ? `https://map.naver.com/p/search/${mq}?searchCoord=${stop.lng};${stop.lat}`
+        : `https://map.naver.com/p/search/${mq}`;
+      actionsHTML += `<a href="${naverHref}" target="_blank" class="act-btn map"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>Naver Map</a>`;
     }
     if (hasUber) {
       const uberAddr = stop.kr ? stop.kr.addr : (stop.mapQuery || stop.title);
@@ -892,10 +895,11 @@ function renderStopCard(stop, idx, dayKey, orderedStops) {
   }
 
   if (hasNearby) {
+    const nearbyCoord = `?searchCoord=${stop.lng};${stop.lat}`;
     actionsHTML += `<div class="nearby-row">
-      <a href="https://www.google.com/maps/search/restaurants/@${stop.lat},${stop.lng},15z" target="_blank" class="nearby-btn" style="background:#f0fdf4;color:#15803d"><i class="fa-solid fa-utensils fa-xs"></i> 附近餐廳</a>
-      <a href="https://www.google.com/maps/search/convenience+store/@${stop.lat},${stop.lng},15z" target="_blank" class="nearby-btn" style="background:#f0f9ff;color:#0369a1"><i class="fa-solid fa-store fa-xs"></i> 便利店</a>
-      <a href="https://www.google.com/maps/search/attractions/@${stop.lat},${stop.lng},15z" target="_blank" class="nearby-btn" style="background:#fef2f2;color:#dc2626"><i class="fa-solid fa-location-dot fa-xs"></i> 附近景點</a>
+      <a href="https://map.naver.com/p/search/${encodeURIComponent('맛집')}${nearbyCoord}" target="_blank" class="nearby-btn" style="background:#f0fdf4;color:#15803d"><i class="fa-solid fa-utensils fa-xs"></i> 附近餐廳</a>
+      <a href="https://map.naver.com/p/search/${encodeURIComponent('편의점')}${nearbyCoord}" target="_blank" class="nearby-btn" style="background:#f0f9ff;color:#0369a1"><i class="fa-solid fa-store fa-xs"></i> 便利店</a>
+      <a href="https://map.naver.com/p/search/${encodeURIComponent('관광지')}${nearbyCoord}" target="_blank" class="nearby-btn" style="background:#fef2f2;color:#dc2626"><i class="fa-solid fa-location-dot fa-xs"></i> 附近景點</a>
     </div>`;
   }
 
@@ -946,7 +950,7 @@ function renderTransitBar(fromLat, fromLng, toLat, toLng) {
 }
 
 function openRoute(fromLat, fromLng, toLat, toLng) {
-  const url = `https://www.google.com/maps/dir/?api=1&origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&travelmode=driving`;
+  const url = `https://map.naver.com/p/directions/${fromLng},${fromLat},,,/${toLng},${toLat},,,/-/car`;
   window.open(url, '_blank');
 }
 
@@ -1571,7 +1575,7 @@ function initDayMap(dayKey) {
       <div class="mc-title">${stop.title}</div>
       ${stop.kr ? `<div class="mc-kr">${stop.kr.name}</div><div class="mc-addr">${stop.kr.addr}</div>` : ''}
       <span class="mc-badge" style="${badgeStyle}">${MAP_LABELS[stop.type] || stop.type}</span>
-      ${hasCoords ? `<br><a href="https://www.google.com/maps/search/${mapQ}" target="_blank" class="mc-nav" onclick="event.stopPropagation()"><i class="fa-solid fa-diamond-turn-right fa-xs"></i> Google Maps 導航</a>` : ''}
+      ${hasCoords ? `<br><a href="https://map.naver.com/p/search/${mapQ}?searchCoord=${stop.lng};${stop.lat}" target="_blank" class="mc-nav" onclick="event.stopPropagation()"><i class="fa-solid fa-diamond-turn-right fa-xs"></i> Naver Map 導航</a>` : ''}
     `;
     if (hasCoords) {
       card.addEventListener('click', () => {
