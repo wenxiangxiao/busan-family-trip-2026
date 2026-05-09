@@ -7,7 +7,7 @@
  *
  * 升版時改 CACHE_VERSION，舊 cache 自動清除。
  */
-const CACHE_VERSION = 'busan-v3';
+const CACHE_VERSION = 'busan-v4';
 const SHELL_CACHE   = `${CACHE_VERSION}-shell`;
 const API_CACHE     = `${CACHE_VERSION}-api`;
 const ASSET_CACHE   = `${CACHE_VERSION}-assets`;
@@ -99,9 +99,12 @@ async function networkFirst(req, cacheName) {
   }
 }
 
-// 給前端訊息：清快取
+// 給前端訊息
 self.addEventListener('message', e => {
-  if (e.data && e.data.type === 'CLEAR_CACHE') {
+  if (!e.data) return;
+  if (e.data.type === 'CLEAR_CACHE') {
     caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+  } else if (e.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
   }
 });

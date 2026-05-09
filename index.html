@@ -795,7 +795,29 @@ body.is-dragging .menu-section{display:none!important}
 // ===== Service Worker（PWA 離線快取） =====
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(err => console.warn('SW register failed', err));
+    navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then(reg => {
+      // 每次開頁主動檢查 SW 更新；若有新版下載完成 → 重整一次
+      reg.update().catch(()=>{});
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            // 已有舊 SW 控制中 + 新版安裝完 = 升級了
+            console.log('SW updated, reloading…');
+            // 給新 SW 訊號 skip waiting
+            nw.postMessage && nw.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      });
+      // 控制權變更 → 重新整理一次（拿到最新 cache）
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (refreshing) return;
+        refreshing = true;
+        window.location.reload();
+      });
+    }).catch(err => console.warn('SW register failed', err));
   });
 }
 
@@ -1292,36 +1314,72 @@ function naverDirectionsUrl(fromLat, fromLng, toLat, toLng, mode, toName) {
 
 let _navTarget = null;
 
+// 是否在 PWA standalone 模式（iOS / Android）
+function isPWA() {
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+         window.navigator.standalone === true;
+}
+
+// 開外部連結 — PWA 模式優先用 location.href（會跳 Safari），瀏覽器模式用 window.open
+function openExternal(url) {
+  if (isPWA()) {
+    // 在 standalone PWA 中，window.open 通常被忽略；用 location.href 才會跳出去
+    window.location.href = url;
+  } else {
+    // 一般瀏覽器：開新分頁
+    const w = window.open(url, '_blank');
+    if (!w) {
+      // popup 被擋，fallback
+      window.location.href = url;
+    }
+  }
+}
+
 function navigateTo(toLat, toLng, toName) {
   if (!navigator.geolocation) {
-    showToast('瀏覽器不支援定位，改用搜尋');
-    window.open(`https://map.naver.com/p/search/${encodeURIComponent(toName||'')}?searchCoord=${toLng};${toLat}`, '_blank');
+    openExternal(`https://map.naver.com/p/search/${encodeURIComponent(toName||'')}?searchCoord=${toLng};${toLat}`);
     return;
   }
-  showToast('讀取位置中…');
+  showToast('讀取位置中…（請允許定位）');
+
+  // 雙保險：12 秒後若還沒結果，自動 fallback
+  let done = false;
+  const fallbackTimer = setTimeout(() => {
+    if (done) return;
+    done = true;
+    showToast('定位超時，改用搜尋');
+    openExternal(`https://map.naver.com/p/search/${encodeURIComponent(toName||'')}?searchCoord=${toLng};${toLat}`);
+  }, 12000);
+
   navigator.geolocation.getCurrentPosition(
     pos => {
+      if (done) return;
+      done = true; clearTimeout(fallbackTimer);
       const fromLat = pos.coords.latitude;
       const fromLng = pos.coords.longitude;
       const km = distKm(fromLat, fromLng, toLat, toLng);
-      // 0~1.5km 直接走路；1.5~10 給選擇；>10 直接開車
       if (km <= 1.5) {
-        window.open(naverDirectionsUrl(fromLat, fromLng, toLat, toLng, 'walk', toName), '_blank');
+        openExternal(naverDirectionsUrl(fromLat, fromLng, toLat, toLng, 'walk', toName));
       } else if (km > 10) {
-        window.open(naverDirectionsUrl(fromLat, fromLng, toLat, toLng, 'car', toName), '_blank');
+        openExternal(naverDirectionsUrl(fromLat, fromLng, toLat, toLng, 'car', toName));
       } else {
-        // 中等距離：彈出小選單讓你選
         _navTarget = { fromLat, fromLng, toLat, toLng, toName, km };
         showNavChoice(km);
       }
     },
     err => {
+      if (done) return;
+      done = true; clearTimeout(fallbackTimer);
       console.warn('geolocation error', err);
-      const msg = err.code === 1 ? '需要您允許定位權限' : '無法取得位置';
+      let msg;
+      if (err.code === 1) msg = '需要您允許定位權限';
+      else if (err.code === 2) msg = '無法取得位置';
+      else if (err.code === 3) msg = '定位逾時';
+      else msg = '無法取得位置';
       showToast(msg + '，改用搜尋');
-      window.open(`https://map.naver.com/p/search/${encodeURIComponent(toName||'')}?searchCoord=${toLng};${toLat}`, '_blank');
+      openExternal(`https://map.naver.com/p/search/${encodeURIComponent(toName||'')}?searchCoord=${toLng};${toLat}`);
     },
-    { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+    { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
   );
 }
 
@@ -1350,8 +1408,8 @@ function showNavChoice(km) {
 function pickNavMode(mode) {
   if (!_navTarget) { closeNavChoice(); return; }
   const { fromLat, fromLng, toLat, toLng, toName } = _navTarget;
-  window.open(naverDirectionsUrl(fromLat, fromLng, toLat, toLng, mode, toName), '_blank');
   closeNavChoice();
+  openExternal(naverDirectionsUrl(fromLat, fromLng, toLat, toLng, mode, toName));
 }
 function closeNavChoice() {
   const bar = document.getElementById('nav-choice');
