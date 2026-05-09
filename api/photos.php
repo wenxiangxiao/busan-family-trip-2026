@@ -33,10 +33,9 @@ if ($method === 'POST') {
         jsonResponse(['error' => 'photo too large (max 5MB)'], 400);
     }
 
-    // 偵測 MIME
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    $mime = finfo_file($finfo, $file['tmp_name']);
-    finfo_close($finfo);
+    // 偵測 MIME（PHP 8+ finfo 物件會自動釋放，不需 finfo_close）
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($file['tmp_name']);
 
     $allowedMime = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
     if (!isset($allowedMime[$mime])) {
@@ -47,14 +46,23 @@ if ($method === 'POST') {
     // 月份子資料夾
     $monthDir = date('Y-m');
     $targetDir = $uploadsDir . '/' . $monthDir;
-    if (!is_dir($targetDir)) @mkdir($targetDir, 0755, true);
+    if (!is_dir($targetDir)) {
+        if (!@mkdir($targetDir, 0775, true) && !is_dir($targetDir)) {
+            $err = error_get_last();
+            jsonResponse(['error' => 'mkdir failed', 'detail' => $err['message'] ?? '', 'path' => $targetDir, 'parent_writable' => is_writable($uploadsDir)], 500);
+        }
+    }
+    if (!is_writable($targetDir)) {
+        jsonResponse(['error' => 'target dir not writable', 'path' => $targetDir], 500);
+    }
 
     $filename = $stopId . '-' . time() . '-' . bin2hex(random_bytes(4)) . '.' . $ext;
     $relPath = $monthDir . '/' . $filename;
     $absPath = $targetDir . '/' . $filename;
 
     if (!move_uploaded_file($file['tmp_name'], $absPath)) {
-        jsonResponse(['error' => 'move_uploaded_file failed'], 500);
+        $err = error_get_last();
+        jsonResponse(['error' => 'move_uploaded_file failed', 'detail' => $err['message'] ?? '', 'tmp' => $file['tmp_name'], 'dst' => $absPath], 500);
     }
 
     // 把路徑寫進 stop_notes.photos

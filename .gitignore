@@ -8,3 +8,7 @@
 # IDE
 .idea/
 .vscode/
+
+# Uploads (照片：保留資料夾，忽略內容)
+uploads/*
+!uploads/.gitkeep
