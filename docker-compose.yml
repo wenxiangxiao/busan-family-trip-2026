@@ -7,6 +7,7 @@ services:
       - "3463:80"
     volumes:
       - .:/var/www/html
+      - busan_uploads:/var/www/html/uploads
     depends_on:
       - mysql
     restart: unless-stopped
@@ -27,3 +28,4 @@ services:
 
 volumes:
   busan_mysql_data:
+  busan_uploads:

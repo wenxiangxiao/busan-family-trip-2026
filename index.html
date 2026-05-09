@@ -269,6 +269,37 @@ body.is-dragging .menu-section{display:none!important}
 .em-card-title{font-size:14px;font-weight:600;color:var(--ink)}
 .em-card-sub{font-size:11px;color:var(--ink-4);margin-top:2px;letter-spacing:.04em}
 
+/* ===== NOTE / PHOTOS ===== */
+.note-trigger{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:4px;color:var(--ink-5);cursor:pointer;border:none;background:none;transition:color .15s;flex-shrink:0;padding:0;margin-left:4px}
+.note-trigger:active,.note-trigger.has-content{color:var(--accent)}
+.note-trigger.has-content{color:var(--accent)}
+.note-block{margin-top:10px;padding-top:10px;border-top:1px dashed var(--rule)}
+.note-text{font-family:'Fraunces',serif;font-style:italic;font-size:13px;color:var(--ink-3);line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.note-text::before{content:'\201C';font-size:20px;color:var(--accent);margin-right:2px;line-height:0;vertical-align:-4px}
+.note-text::after{content:'\201D';font-size:20px;color:var(--accent);margin-left:2px;line-height:0;vertical-align:-4px}
+.note-photos{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.note-photo{width:64px;height:64px;border:1px solid var(--rule);background-size:cover;background-position:center;cursor:pointer;flex-shrink:0;transition:opacity .15s}
+.note-photo:active{opacity:.7}
+/* note modal */
+.note-modal{background:var(--paper);border-radius:16px 16px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));width:100%;max-width:480px;animation:slideUp .25s ease-out;border-top:3px solid var(--accent);max-height:90vh;overflow-y:auto}
+.note-modal h3{font-family:'Fraunces',serif;font-size:20px;font-weight:500;margin-bottom:6px;color:var(--ink);letter-spacing:-.01em}
+.note-modal .nm-sub{font-size:11px;color:var(--ink-4);letter-spacing:.06em;margin-bottom:14px}
+.note-modal textarea{width:100%;background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;font-size:14px;outline:none;color:var(--ink);font-family:inherit;min-height:90px;resize:vertical}
+.note-modal textarea:focus{border-color:var(--accent)}
+.nm-photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.nm-photo-tile{aspect-ratio:1;background:var(--paper-2);border:1px solid var(--rule);background-size:cover;background-position:center;position:relative;cursor:pointer}
+.nm-photo-tile.add{display:flex;align-items:center;justify-content:center;color:var(--ink-4);border:1px dashed var(--ink-5);font-size:24px;transition:all .15s}
+.nm-photo-tile.add:active{background:var(--paper);border-color:var(--accent);color:var(--accent)}
+.nm-photo-tile .nm-del{position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(26,22,20,.85);color:var(--paper);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;border:none}
+.nm-uploading{position:absolute;inset:0;background:rgba(250,248,245,.85);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--ink);letter-spacing:.08em;text-transform:uppercase}
+.nm-photo-hint{font-size:10px;color:var(--ink-4);margin-top:8px;letter-spacing:.04em;font-style:italic;font-family:'Fraunces',serif}
+
+/* photo lightbox */
+.photo-lightbox{display:none;position:fixed;inset:0;background:rgba(26,22,20,.92);z-index:300;align-items:center;justify-content:center;padding:20px;cursor:pointer}
+.photo-lightbox.show{display:flex}
+.photo-lightbox img{max-width:100%;max-height:90vh;object-fit:contain}
+.photo-lightbox-close{position:absolute;top:env(safe-area-inset-top, 14px);right:14px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.12);color:var(--paper);display:flex;align-items:center;justify-content:center;border:none;cursor:pointer}
+
 /* Toast (overridden in JS via inline) */
 </style>
 </head>
@@ -656,6 +687,34 @@ body.is-dragging .menu-section{display:none!important}
   </div>
 </div>
 
+<!-- ========== NOTE / PHOTO MODAL ========== -->
+<div class="add-modal-overlay" id="note-modal-overlay" onclick="if(event.target===this)closeNoteModal()">
+  <div class="note-modal">
+    <h3 id="note-modal-title">心得 &amp; 照片</h3>
+    <div class="nm-sub" id="note-modal-sub"></div>
+
+    <label class="text-[10px] tracking-[.14em] uppercase font-medium text-[var(--ink-4)] block mb-1.5">Note &middot; 心得</label>
+    <textarea id="note-text" placeholder="記下這個地方發生的事 / 評價 / 小朋友的反應..."></textarea>
+
+    <label class="text-[10px] tracking-[.14em] uppercase font-medium text-[var(--ink-4)] block mb-1.5 mt-4">Photos &middot; 照片</label>
+    <div class="nm-photo-grid" id="note-photo-grid"></div>
+    <div class="nm-photo-hint">最多 6 張 &middot; 上傳前自動壓縮到 1280px</div>
+    <input type="file" id="note-photo-input" accept="image/jpeg,image/png,image/webp" style="display:none" multiple>
+
+    <div class="btn-row">
+      <button class="btn-cancel" onclick="closeNoteModal()">取消</button>
+      <button class="btn-delete" onclick="clearNoteAll()">清空</button>
+      <button class="btn-confirm" onclick="confirmNote()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== PHOTO LIGHTBOX ========== -->
+<div class="photo-lightbox" id="photo-lightbox" onclick="closeLightbox()">
+  <button class="photo-lightbox-close" onclick="closeLightbox()"><i class="fa-solid fa-xmark"></i></button>
+  <img id="photo-lightbox-img" src="" alt="">
+</div>
+
 <!-- ========== BOTTOM NAV ========== -->
 <nav class="bottom-nav">
   <div class="grid grid-cols-4 max-w-lg mx-auto">
@@ -734,6 +793,10 @@ async function loadFromAPI() {
       loadExpenses();
     }
   } catch(e) {}
+
+  // 載入心得 / 照片，再重新渲染五天讓卡片帶 note
+  await loadNotes();
+  ['day1','day2','day3','day4','day5'].forEach(renderDay);
 }
 
 // API 同步 helper
@@ -1075,6 +1138,25 @@ function renderStopCard(stop, idx, dayKey, orderedStops) {
 
   const badgesHTML = allBadges.length ? `<div class="mt-2 flex flex-wrap gap-1.5">${allBadges.map(b => `<span class="inline-flex items-center text-[9.5px] font-medium tracking-[.12em] uppercase px-2 py-[3px] rounded-full" style="${b.style}">${b.text}</span>`).join('')}</div>` : '';
 
+  // Note block (心得+照片)
+  const noteData = stop.dbId ? getNote(stop.dbId) : null;
+  const hasNote = noteData && (noteData.note_text || (noteData.photos && noteData.photos.length));
+  let noteHTML = '';
+  if (hasNote) {
+    noteHTML += '<div class="note-block">';
+    if (noteData.note_text) noteHTML += `<div class="note-text">${escapeHtml(noteData.note_text)}</div>`;
+    if (noteData.photos && noteData.photos.length) {
+      noteHTML += '<div class="note-photos">';
+      noteData.photos.forEach(p => {
+        const url = `${API_BASE}/../uploads/${p}`;
+        noteHTML += `<div class="note-photo" style="background-image:url('${url}')" onclick="openLightbox('${url}')"></div>`;
+      });
+      noteHTML += '</div>';
+    }
+    noteHTML += '</div>';
+  }
+  const noteBtnCls = hasNote ? 'note-trigger has-content' : 'note-trigger';
+
   const wrapper = document.createElement('div');
   wrapper.className = 'relative tl-card';
   wrapper.dataset.idx = idx;
@@ -1092,11 +1174,15 @@ function renderStopCard(stop, idx, dayKey, orderedStops) {
             <div class="tl-title">${stop.title}</div>
             ${stop.detail ? `<div class="tl-detail">${stop.detail}</div>` : ''}
           </div>
-          <button class="edit-trigger" onclick="openEditModal('${dayKey}',${idx})"><i class="fa-solid fa-pen fa-xs"></i></button>
+          <div class="flex items-center flex-shrink-0">
+            <button class="${noteBtnCls}" onclick="openNoteModal('${dayKey}',${idx})" title="心得 / 照片"><i class="fa-solid fa-camera fa-xs"></i></button>
+            <button class="edit-trigger" onclick="openEditModal('${dayKey}',${idx})" title="編輯"><i class="fa-solid fa-pen fa-xs"></i></button>
+          </div>
         </div>
         ${badgesHTML}
         ${(stop.kr && (stop.type === 'food' || stop.type === 'hotel')) ? `<div class="addr-line"><i class="fa-solid fa-location-dot"></i><span><span class="font-kr">${stop.kr.name}</span><br>${stop.kr.addr}</span></div>` : ''}
         ${stop.menu ? renderMenu(stop.menu) : ''}
+        ${noteHTML}
         ${actionsHTML}
       </div>
     </div>
@@ -1366,6 +1452,241 @@ document.querySelectorAll('.day-pill').forEach(pill => {
 // ===== KR Popup =====
 function toggleKr(btn){const c=btn.closest('.tl-card');if(c){const p=c.querySelector('.kr-popup');if(p)p.classList.toggle('show')}}
 function copyKr(el){const p=el.closest('.kr-popup');const t=p.querySelector('.kr-name').textContent+'\n'+p.querySelector('.kr-addr').textContent;navigator.clipboard.writeText(t).then(()=>{el.textContent='已複製!';setTimeout(()=>{el.textContent='點擊複製韓文地址'},1500)})}
+
+// ===== Notes & Photos =====
+const NOTES = {}; // stop_id -> { note_text, photos:[paths] }
+let _noteEditing = { stopId: null, dayKey: null, idx: null, photos: [] };
+
+async function loadNotes() {
+  if (!USE_API) return;
+  try {
+    const r = await fetch(API_BASE + '/notes.php');
+    const d = await r.json();
+    if (d.notes) {
+      Object.keys(d.notes).forEach(sid => { NOTES[sid] = d.notes[sid]; });
+    }
+  } catch(e) { console.warn('load notes failed', e); }
+}
+
+function getNote(stopId) {
+  if (!stopId) return null;
+  return NOTES[stopId] || null;
+}
+
+function openNoteModal(dayKey, idx) {
+  const stop = DAYS_ORIGINAL[dayKey][idx];
+  if (!stop || !stop.dbId) {
+    showToast('需先連線 API，且該行程要存進資料庫');
+    return;
+  }
+  _noteEditing = { stopId: stop.dbId, dayKey, idx, photos: [] };
+  const existing = getNote(stop.dbId) || {};
+  _noteEditing.photos = (existing.photos || []).slice();
+
+  document.getElementById('note-modal-title').textContent = stop.title;
+  document.getElementById('note-modal-sub').textContent = stop.time + ' · ' + (stop.detail || '');
+  document.getElementById('note-text').value = existing.note_text || '';
+  renderNotePhotoGrid();
+  document.getElementById('note-modal-overlay').classList.add('show');
+}
+
+function closeNoteModal() {
+  document.getElementById('note-modal-overlay').classList.remove('show');
+  _noteEditing = { stopId: null, dayKey: null, idx: null, photos: [] };
+}
+
+function renderNotePhotoGrid() {
+  const grid = document.getElementById('note-photo-grid');
+  grid.innerHTML = '';
+  _noteEditing.photos.forEach(p => {
+    const tile = document.createElement('div');
+    tile.className = 'nm-photo-tile';
+    tile.style.backgroundImage = `url(${API_BASE}/../uploads/${p})`;
+    tile.onclick = () => openLightbox(`${API_BASE}/../uploads/${p}`);
+    const del = document.createElement('button');
+    del.className = 'nm-del';
+    del.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    del.onclick = (e) => { e.stopPropagation(); deletePhoto(p); };
+    tile.appendChild(del);
+    grid.appendChild(tile);
+  });
+  if (_noteEditing.photos.length < 6) {
+    const add = document.createElement('div');
+    add.className = 'nm-photo-tile add';
+    add.innerHTML = '<i class="fa-solid fa-plus"></i>';
+    add.onclick = () => document.getElementById('note-photo-input').click();
+    grid.appendChild(add);
+  }
+}
+
+document.getElementById('note-photo-input').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files || []);
+  e.target.value = ''; // reset for next pick
+  for (const f of files) {
+    if (_noteEditing.photos.length >= 6) { showToast('最多 6 張'); break; }
+    await uploadPhoto(f);
+  }
+});
+
+// 壓縮圖片到 1280px 寬，jpeg quality 0.82
+async function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = () => { img.src = reader.result; };
+    reader.onerror = reject;
+    img.onload = () => {
+      const maxW = 1280;
+      let w = img.width, h = img.height;
+      if (w > maxW) { h = h * maxW / w; w = maxW; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => {
+        if (!blob) reject(new Error('toBlob failed'));
+        else resolve(new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' }));
+      }, 'image/jpeg', 0.82);
+    };
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadPhoto(file) {
+  if (!_noteEditing.stopId) return;
+  // 顯示上傳中 placeholder
+  const grid = document.getElementById('note-photo-grid');
+  const ph = document.createElement('div');
+  ph.className = 'nm-photo-tile';
+  ph.innerHTML = '<div class="nm-uploading">上傳中…</div>';
+  grid.insertBefore(ph, grid.querySelector('.nm-photo-tile.add'));
+
+  try {
+    const compressed = await compressImage(file);
+    const fd = new FormData();
+    fd.append('stop_id', _noteEditing.stopId);
+    fd.append('photo', compressed);
+    const r = await fetch(API_BASE + '/photos.php', { method: 'POST', body: fd });
+    const d = await r.json();
+    if (d.status === 'ok' && d.path) {
+      _noteEditing.photos.push(d.path);
+      // 同步更新本地 NOTES 快取
+      NOTES[_noteEditing.stopId] = NOTES[_noteEditing.stopId] || { stop_id: _noteEditing.stopId };
+      NOTES[_noteEditing.stopId].photos = _noteEditing.photos.slice();
+      renderNotePhotoGrid();
+      // 同時更新該卡片底部
+      refreshNoteBlock(_noteEditing.dayKey, _noteEditing.idx);
+    } else {
+      showToast('上傳失敗：' + (d.error || '未知'));
+      ph.remove();
+    }
+  } catch(e) {
+    showToast('壓縮/上傳失敗');
+    ph.remove();
+  }
+}
+
+async function deletePhoto(path) {
+  if (!_noteEditing.stopId) return;
+  if (!confirm('刪除這張照片？')) return;
+  try {
+    const url = API_BASE + '/photos.php?stop_id=' + _noteEditing.stopId + '&path=' + encodeURIComponent(path);
+    const r = await fetch(url, { method: 'DELETE' });
+    const d = await r.json();
+    if (d.status === 'ok') {
+      _noteEditing.photos = d.photos || _noteEditing.photos.filter(p => p !== path);
+      NOTES[_noteEditing.stopId] = NOTES[_noteEditing.stopId] || {};
+      NOTES[_noteEditing.stopId].photos = _noteEditing.photos.slice();
+      renderNotePhotoGrid();
+      refreshNoteBlock(_noteEditing.dayKey, _noteEditing.idx);
+    }
+  } catch(e) {}
+}
+
+async function confirmNote() {
+  if (!_noteEditing.stopId) return;
+  const text = document.getElementById('note-text').value.trim();
+  try {
+    const r = await fetch(API_BASE + '/notes.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stop_id: _noteEditing.stopId, note_text: text }),
+    });
+    const d = await r.json();
+    if (d.status === 'ok') {
+      NOTES[_noteEditing.stopId] = NOTES[_noteEditing.stopId] || { stop_id: _noteEditing.stopId, photos: _noteEditing.photos.slice() };
+      NOTES[_noteEditing.stopId].note_text = text;
+      refreshNoteBlock(_noteEditing.dayKey, _noteEditing.idx);
+      showToast('已儲存');
+    } else {
+      showToast('儲存失敗');
+    }
+  } catch(e) { showToast('儲存失敗'); }
+  closeNoteModal();
+}
+
+async function clearNoteAll() {
+  if (!_noteEditing.stopId) return;
+  if (!confirm('清空這筆心得與所有照片？')) return;
+  try {
+    await fetch(API_BASE + '/notes.php?stop_id=' + _noteEditing.stopId, { method: 'DELETE' });
+    delete NOTES[_noteEditing.stopId];
+    refreshNoteBlock(_noteEditing.dayKey, _noteEditing.idx);
+    showToast('已清空');
+  } catch(e) { showToast('清空失敗'); }
+  closeNoteModal();
+}
+
+function refreshNoteBlock(dayKey, idx) {
+  const card = document.querySelector(`.tl-card[data-day="${dayKey}"][data-idx="${idx}"]`);
+  if (!card) return;
+  const inner = card.querySelector('.tl-card-inner');
+  if (!inner) return;
+  // 移除舊 note-block
+  const old = inner.querySelector('.note-block');
+  if (old) old.remove();
+  // 重新插入（如果有資料）
+  const stop = DAYS_ORIGINAL[dayKey][idx];
+  const note = stop && stop.dbId ? getNote(stop.dbId) : null;
+  if (!note || (!note.note_text && !(note.photos && note.photos.length))) {
+    // 同步把 note-trigger 樣式還原
+    const trig = inner.querySelector('.note-trigger');
+    if (trig) trig.classList.remove('has-content');
+    return;
+  }
+  const block = document.createElement('div');
+  block.className = 'note-block';
+  let html = '';
+  if (note.note_text) html += `<div class="note-text">${escapeHtml(note.note_text)}</div>`;
+  if (note.photos && note.photos.length) {
+    html += '<div class="note-photos">';
+    note.photos.forEach(p => {
+      const url = `${API_BASE}/../uploads/${p}`;
+      html += `<div class="note-photo" style="background-image:url('${url}')" onclick="openLightbox('${url}')"></div>`;
+    });
+    html += '</div>';
+  }
+  block.innerHTML = html;
+  // 插在 actions 之前
+  const actions = inner.querySelector('.act-row');
+  if (actions) inner.insertBefore(block, actions);
+  else inner.appendChild(block);
+  const trig = inner.querySelector('.note-trigger');
+  if (trig) trig.classList.add('has-content');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Lightbox
+function openLightbox(src) {
+  document.getElementById('photo-lightbox-img').src = src;
+  document.getElementById('photo-lightbox').classList.add('show');
+}
+function closeLightbox() {
+  document.getElementById('photo-lightbox').classList.remove('show');
+}
 
 // ===== Toast =====
 function showToast(msg){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1A1614;color:#FAF8F5;padding:10px 20px;font-size:11px;font-weight:500;letter-spacing:.08em;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;text-align:center;max-width:85vw;border:1px solid #4A423B;border-radius:99px';document.body.appendChild(t)}t.textContent=msg;t.style.opacity='1';clearTimeout(t._timer);t._timer=setTimeout(()=>{t.style.opacity='0'},2500)}
