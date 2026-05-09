@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#FAF8F5">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <title>釜山家族旅遊 2026</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -241,8 +243,13 @@ body.is-dragging .menu-section{display:none!important}
 .tl-num.t-ticket{border-color:var(--accent);color:var(--accent)}
 
 /* Ticket grid (overview) */
-.ticket-chip{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--rule);background:var(--paper);font-size:12px;color:var(--ink-2);font-weight:500;letter-spacing:.02em}
-.ticket-chip i{color:var(--accent);font-size:10px}
+.ticket-chip{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--rule);background:var(--paper);font-size:12px;color:var(--ink-2);font-weight:500;letter-spacing:.02em;cursor:pointer;transition:all .15s;text-align:left;font-family:inherit;width:100%;position:relative}
+.ticket-chip:active{background:var(--paper-2)}
+.ticket-chip.has-voucher{border-color:var(--accent);background:var(--accent-soft)}
+.ticket-chip.has-voucher i{color:var(--accent)}
+.ticket-chip i{color:var(--ink-4);font-size:10px}
+.ticket-chip .v-dot{position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--accent);display:none}
+.ticket-chip.has-voucher .v-dot{display:block}
 
 /* Weather strip */
 .weather-day{text-align:center;padding:10px 4px;border:1px solid var(--rule);background:var(--paper);transition:border-color .15s}
@@ -300,6 +307,21 @@ body.is-dragging .menu-section{display:none!important}
 .photo-lightbox img{max-width:100%;max-height:90vh;object-fit:contain}
 .photo-lightbox-close{position:absolute;top:env(safe-area-inset-top, 14px);right:14px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.12);color:var(--paper);display:flex;align-items:center;justify-content:center;border:none;cursor:pointer}
 
+/* ===== NOW BAR ===== */
+.now-bar{display:none;background:var(--ink);color:var(--paper);padding:10px 14px;position:sticky;top:92px;z-index:39;border-bottom:1px solid var(--ink);font-family:'Inter',sans-serif}
+.now-bar.show{display:block;animation:fadeUp .25s}
+.now-bar-row{display:flex;align-items:center;gap:10px}
+.now-bar-pulse{width:8px;height:8px;border-radius:50%;background:#fde68a;flex-shrink:0;box-shadow:0 0 0 0 rgba(253,230,138,.7);animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(253,230,138,.55)}70%{box-shadow:0 0 0 8px rgba(253,230,138,0)}100%{box-shadow:0 0 0 0 rgba(253,230,138,0)}}
+.now-bar-label{font-family:'Fraunces',serif;font-style:italic;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-mid);flex-shrink:0}
+.now-bar-time{font-family:'Fraunces',serif;font-style:italic;font-size:13px;color:var(--accent-mid);font-weight:500;letter-spacing:.02em;flex-shrink:0}
+.now-bar-title{font-size:13px;font-weight:500;color:var(--paper);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.now-bar-go{display:inline-flex;align-items:center;gap:4px;background:var(--accent);color:var(--paper);border:none;padding:6px 10px;border-radius:99px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;flex-shrink:0;font-family:inherit}
+.now-bar-go:active{opacity:.8}
+.now-bar-divider{height:1px;background:rgba(255,255,255,.1);margin:8px 0}
+.now-bar-row.next .now-bar-pulse{background:transparent;border:1px dashed var(--ink-5);animation:none}
+.now-bar-row.next .now-bar-label,.now-bar-row.next .now-bar-time{color:var(--ink-5)}
+
 /* Toast (overridden in JS via inline) */
 </style>
 </head>
@@ -328,6 +350,9 @@ body.is-dragging .menu-section{display:none!important}
       <button class="day-pill flex-shrink-0" data-day="day5"><span class="pill-num">05</span><span class="pill-date">5.16 Sat</span></button>
     </div>
   </div>
+
+  <!-- NOW BAR — 旅行期間自動顯示 -->
+  <div class="now-bar" id="now-bar"></div>
 
   <!-- Overview -->
   <div class="sub-panel active px-5 pt-6 pb-6 max-w-lg mx-auto" id="overview">
@@ -394,17 +419,17 @@ body.is-dragging .menu-section{display:none!important}
     <!-- Tickets -->
     <section class="ed-card">
       <div class="ed-card-eyebrow">03 &middot; Booked</div>
-      <h3 class="ed-card-title">已訂票券</h3>
+      <h3 class="ed-card-title">已訂票券 <span class="text-[11px] text-[var(--ink-4)] tracking-[.06em] font-normal italic font-heading ml-1">點擊收納訂單號／截圖</span></h3>
       <div class="ed-rule thin"></div>
-      <div class="grid grid-cols-2 gap-2">
-        <div class="ticket-chip"><i class="fa-solid fa-check"></i><span>Skyline Luge</span></div>
-        <div class="ticket-chip"><i class="fa-solid fa-check"></i><span>樂天世界</span></div>
-        <div class="ticket-chip"><i class="fa-solid fa-check"></i><span>SEALIFE</span></div>
-        <div class="ticket-chip"><i class="fa-solid fa-check"></i><span>X the SKY</span></div>
-        <div class="ticket-chip"><i class="fa-solid fa-check"></i><span>藍線公園</span></div>
-        <div class="ticket-chip"><i class="fa-solid fa-check"></i><span>釜山塔</span></div>
-        <div class="ticket-chip"><i class="fa-solid fa-check"></i><span>膠囊列車</span></div>
-        <div class="ticket-chip"><i class="fa-solid fa-check"></i><span>ARTE MUSEUM</span></div>
+      <div class="grid grid-cols-2 gap-2" id="voucher-grid">
+        <button class="ticket-chip" data-voucher="luge"><i class="fa-solid fa-ticket"></i><span>Skyline Luge</span></button>
+        <button class="ticket-chip" data-voucher="lotteworld"><i class="fa-solid fa-ticket"></i><span>樂天世界</span></button>
+        <button class="ticket-chip" data-voucher="sealife"><i class="fa-solid fa-ticket"></i><span>SEALIFE</span></button>
+        <button class="ticket-chip" data-voucher="xthesky"><i class="fa-solid fa-ticket"></i><span>X the SKY</span></button>
+        <button class="ticket-chip" data-voucher="blueline"><i class="fa-solid fa-ticket"></i><span>藍線公園</span></button>
+        <button class="ticket-chip" data-voucher="busantower"><i class="fa-solid fa-ticket"></i><span>釜山塔</span></button>
+        <button class="ticket-chip" data-voucher="skycapsule"><i class="fa-solid fa-ticket"></i><span>膠囊列車</span></button>
+        <button class="ticket-chip" data-voucher="arte"><i class="fa-solid fa-ticket"></i><span>ARTE MUSEUM</span></button>
       </div>
     </section>
 
@@ -709,6 +734,34 @@ body.is-dragging .menu-section{display:none!important}
   </div>
 </div>
 
+<!-- ========== VOUCHER MODAL ========== -->
+<div class="add-modal-overlay" id="voucher-modal-overlay" onclick="if(event.target===this)closeVoucherModal()">
+  <div class="note-modal">
+    <h3 id="voucher-modal-title">票券</h3>
+    <div class="nm-sub" id="voucher-modal-sub">輸入訂單號 / 連結 / 上傳截圖，老婆也能在她手機看到</div>
+
+    <label class="text-[10px] tracking-[.14em] uppercase font-medium text-[var(--ink-4)] block mb-1.5">Order No &middot; 訂單號</label>
+    <input id="voucher-order" type="text" class="tool-input" placeholder="KKday / Klook 訂單號" style="font-size:13px;font-style:normal">
+
+    <label class="text-[10px] tracking-[.14em] uppercase font-medium text-[var(--ink-4)] block mb-1.5 mt-3">Link &middot; 連結</label>
+    <input id="voucher-link" type="url" class="tool-input" placeholder="https://..." style="font-size:13px;font-style:normal">
+
+    <label class="text-[10px] tracking-[.14em] uppercase font-medium text-[var(--ink-4)] block mb-1.5 mt-3">Note &middot; 備註</label>
+    <textarea id="voucher-note" placeholder="入場時間、票數、其他注意事項…"></textarea>
+
+    <label class="text-[10px] tracking-[.14em] uppercase font-medium text-[var(--ink-4)] block mb-1.5 mt-3">QR / 票券截圖</label>
+    <div class="nm-photo-grid" id="voucher-photo-grid"></div>
+    <div class="nm-photo-hint">最多 4 張 &middot; 自動壓縮</div>
+    <input type="file" id="voucher-photo-input" accept="image/jpeg,image/png,image/webp" style="display:none" multiple>
+
+    <div class="btn-row">
+      <button class="btn-cancel" onclick="closeVoucherModal()">取消</button>
+      <button class="btn-delete" onclick="clearVoucherAll()">清空</button>
+      <button class="btn-confirm" onclick="confirmVoucher()">儲存</button>
+    </div>
+  </div>
+</div>
+
 <!-- ========== PHOTO LIGHTBOX ========== -->
 <div class="photo-lightbox" id="photo-lightbox" onclick="closeLightbox()">
   <button class="photo-lightbox-close" onclick="closeLightbox()"><i class="fa-solid fa-xmark"></i></button>
@@ -739,6 +792,13 @@ body.is-dragging .menu-section{display:none!important}
 
 <script>
 // ===== API 設定（部署時改成正式路徑）=====
+// ===== Service Worker（PWA 離線快取） =====
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => console.warn('SW register failed', err));
+  });
+}
+
 const API_BASE = './api'; // e.g. '/busan/api'
 let USE_API = false; // 自動偵測：API 可用就用 API，否則 fallback localStorage
 
@@ -797,6 +857,9 @@ async function loadFromAPI() {
   // 載入心得 / 照片，再重新渲染五天讓卡片帶 note
   await loadNotes();
   ['day1','day2','day3','day4','day5'].forEach(renderDay);
+
+  // 載入票券
+  await loadVouchers();
 }
 
 // API 同步 helper
@@ -1106,11 +1169,13 @@ function renderStopCard(stop, idx, dayKey, orderedStops) {
       const mq = encodeURIComponent((stop.mapQuery || (stop.kr ? stop.kr.name : '') || stop.title).replace(/\+/g,' '));
       if (stop.lat && stop.lng) {
         actionsHTML += `<button onclick="jumpToMap('${dayKey}',${stop.lat},${stop.lng})" class="act-btn"><i class="fa-solid fa-map-location-dot fa-xs"></i> Map View</button>`;
+        // 導航：用 GPS 抓我位置 → Naver directions
+        actionsHTML += `<button onclick="navigateTo(${stop.lat},${stop.lng},'${(stop.title||'').replace(/'/g,'&#39;')}')" class="act-btn map"><i class="fa-solid fa-diamond-turn-right fa-xs"></i> Go Here</button>`;
       }
       const naverHref = (stop.lat && stop.lng)
         ? `https://map.naver.com/p/search/${mq}?searchCoord=${stop.lng};${stop.lat}`
         : `https://map.naver.com/p/search/${mq}`;
-      actionsHTML += `<a href="${naverHref}" target="_blank" class="act-btn map"><i class="fa-solid fa-location-dot fa-xs"></i> Naver</a>`;
+      actionsHTML += `<a href="${naverHref}" target="_blank" class="act-btn"><i class="fa-solid fa-location-dot fa-xs"></i> Naver</a>`;
     }
     if (hasUber) {
       const uberAddr = stop.kr ? stop.kr.addr : (stop.mapQuery || stop.title);
@@ -1206,6 +1271,92 @@ function renderTransitBar(fromLat, fromLng, toLat, toLng) {
 function openRoute(fromLat, fromLng, toLat, toLng) {
   const url = `https://map.naver.com/p/directions/${fromLng},${fromLat},,,/${toLng},${toLat},,,/-/car`;
   window.open(url, '_blank');
+}
+
+// ===== Navigate to a stop using my current GPS =====
+// 算兩點距離（haversine, km）
+function distKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+function naverDirectionsUrl(fromLat, fromLng, toLat, toLng, mode, toName) {
+  // mode: 'walk' | 'car' | 'publictransit'
+  const m = mode === 'walk' ? 'walk' : mode === 'publictransit' ? 'publictransit' : 'car';
+  const dest = toName ? encodeURIComponent(toName) : '';
+  return `https://map.naver.com/p/directions/${fromLng},${fromLat},,,/${toLng},${toLat},${dest},PLACE_POI/-/${m}`;
+}
+
+let _navTarget = null;
+
+function navigateTo(toLat, toLng, toName) {
+  if (!navigator.geolocation) {
+    showToast('瀏覽器不支援定位，改用搜尋');
+    window.open(`https://map.naver.com/p/search/${encodeURIComponent(toName||'')}?searchCoord=${toLng};${toLat}`, '_blank');
+    return;
+  }
+  showToast('讀取位置中…');
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const fromLat = pos.coords.latitude;
+      const fromLng = pos.coords.longitude;
+      const km = distKm(fromLat, fromLng, toLat, toLng);
+      // 0~1.5km 直接走路；1.5~10 給選擇；>10 直接開車
+      if (km <= 1.5) {
+        window.open(naverDirectionsUrl(fromLat, fromLng, toLat, toLng, 'walk', toName), '_blank');
+      } else if (km > 10) {
+        window.open(naverDirectionsUrl(fromLat, fromLng, toLat, toLng, 'car', toName), '_blank');
+      } else {
+        // 中等距離：彈出小選單讓你選
+        _navTarget = { fromLat, fromLng, toLat, toLng, toName, km };
+        showNavChoice(km);
+      }
+    },
+    err => {
+      console.warn('geolocation error', err);
+      const msg = err.code === 1 ? '需要您允許定位權限' : '無法取得位置';
+      showToast(msg + '，改用搜尋');
+      window.open(`https://map.naver.com/p/search/${encodeURIComponent(toName||'')}?searchCoord=${toLng};${toLat}`, '_blank');
+    },
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+  );
+}
+
+function showNavChoice(km) {
+  let bar = document.getElementById('nav-choice');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'nav-choice';
+    bar.style.cssText = 'position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:14px 16px;border-radius:14px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:90vw;';
+    document.body.appendChild(bar);
+  }
+  bar.innerHTML = `
+    <div style="font-family:Fraunces,serif;font-style:italic;font-size:13px;margin-bottom:8px;color:#E08F7C">距離 ${km.toFixed(1)} km · 怎麼去？</div>
+    <div style="display:flex;gap:6px">
+      <button onclick="pickNavMode('walk')" style="flex:1;padding:10px;background:transparent;color:#FAF8F5;border:1px solid rgba(255,255,255,.25);border-radius:8px;font-size:12px;letter-spacing:.08em;cursor:pointer"><i class="fa-solid fa-person-walking"></i> 走路</button>
+      <button onclick="pickNavMode('publictransit')" style="flex:1;padding:10px;background:transparent;color:#FAF8F5;border:1px solid rgba(255,255,255,.25);border-radius:8px;font-size:12px;letter-spacing:.08em;cursor:pointer"><i class="fa-solid fa-train-subway"></i> 大眾</button>
+      <button onclick="pickNavMode('car')" style="flex:1;padding:10px;background:#C9533A;color:#FAF8F5;border:none;border-radius:8px;font-size:12px;letter-spacing:.08em;cursor:pointer"><i class="fa-solid fa-car"></i> 開車</button>
+    </div>
+    <button onclick="closeNavChoice()" style="position:absolute;top:6px;right:8px;background:none;color:rgba(255,255,255,.5);border:none;font-size:16px;cursor:pointer">×</button>
+  `;
+  bar.style.display = 'block';
+  // 8 秒沒選自動關
+  clearTimeout(bar._timer);
+  bar._timer = setTimeout(closeNavChoice, 8000);
+}
+function pickNavMode(mode) {
+  if (!_navTarget) { closeNavChoice(); return; }
+  const { fromLat, fromLng, toLat, toLng, toName } = _navTarget;
+  window.open(naverDirectionsUrl(fromLat, fromLng, toLat, toLng, mode, toName), '_blank');
+  closeNavChoice();
+}
+function closeNavChoice() {
+  const bar = document.getElementById('nav-choice');
+  if (bar) bar.style.display = 'none';
+  _navTarget = null;
 }
 
 // ===== DRAG TO REORDER (Touch + Mouse) =====
@@ -1688,6 +1839,166 @@ function closeLightbox() {
   document.getElementById('photo-lightbox').classList.remove('show');
 }
 
+// ===== Vouchers =====
+const VOUCHERS = {}; // voucher_key -> { order_no, link, note, photos:[] }
+let _voucherEditing = { key: null, photos: [] };
+
+async function loadVouchers() {
+  try {
+    const r = await fetch(API_BASE + '/vouchers.php');
+    const d = await r.json();
+    if (d.vouchers) {
+      Object.keys(d.vouchers).forEach(k => { VOUCHERS[k] = d.vouchers[k]; });
+    }
+    refreshAllVoucherChips();
+  } catch(e) { console.warn('load vouchers failed', e); }
+}
+
+function refreshAllVoucherChips() {
+  document.querySelectorAll('.ticket-chip[data-voucher]').forEach(chip => {
+    const k = chip.dataset.voucher;
+    const v = VOUCHERS[k];
+    const has = v && (v.order_no || v.link || v.note || (v.photos && v.photos.length));
+    chip.classList.toggle('has-voucher', !!has);
+    if (!chip.querySelector('.v-dot')) {
+      const dot = document.createElement('span'); dot.className = 'v-dot'; chip.appendChild(dot);
+    }
+  });
+}
+
+document.addEventListener('click', (e) => {
+  const chip = e.target.closest('.ticket-chip[data-voucher]');
+  if (chip) openVoucherModal(chip.dataset.voucher, chip.querySelector('span')?.textContent || chip.dataset.voucher);
+});
+
+function openVoucherModal(key, title) {
+  _voucherEditing.key = key;
+  _voucherEditing.photos = (VOUCHERS[key]?.photos || []).slice();
+  const v = VOUCHERS[key] || {};
+  document.getElementById('voucher-modal-title').textContent = title;
+  document.getElementById('voucher-order').value = v.order_no || '';
+  document.getElementById('voucher-link').value = v.link || '';
+  document.getElementById('voucher-note').value = v.note || '';
+  renderVoucherPhotoGrid();
+  document.getElementById('voucher-modal-overlay').classList.add('show');
+}
+
+function closeVoucherModal() {
+  document.getElementById('voucher-modal-overlay').classList.remove('show');
+  _voucherEditing = { key: null, photos: [] };
+}
+
+function renderVoucherPhotoGrid() {
+  const grid = document.getElementById('voucher-photo-grid');
+  grid.innerHTML = '';
+  _voucherEditing.photos.forEach(p => {
+    const tile = document.createElement('div');
+    tile.className = 'nm-photo-tile';
+    tile.style.backgroundImage = `url(${API_BASE}/../uploads/${p})`;
+    tile.onclick = () => openLightbox(`${API_BASE}/../uploads/${p}`);
+    const del = document.createElement('button');
+    del.className = 'nm-del';
+    del.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    del.onclick = (e) => { e.stopPropagation(); deleteVoucherPhoto(p); };
+    tile.appendChild(del);
+    grid.appendChild(tile);
+  });
+  if (_voucherEditing.photos.length < 4) {
+    const add = document.createElement('div');
+    add.className = 'nm-photo-tile add';
+    add.innerHTML = '<i class="fa-solid fa-plus"></i>';
+    add.onclick = () => document.getElementById('voucher-photo-input').click();
+    grid.appendChild(add);
+  }
+}
+
+document.getElementById('voucher-photo-input').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files || []);
+  e.target.value = '';
+  for (const f of files) {
+    if (_voucherEditing.photos.length >= 4) { showToast('最多 4 張'); break; }
+    await uploadVoucherPhoto(f);
+  }
+});
+
+async function uploadVoucherPhoto(file) {
+  if (!_voucherEditing.key) return;
+  const grid = document.getElementById('voucher-photo-grid');
+  const ph = document.createElement('div');
+  ph.className = 'nm-photo-tile';
+  ph.innerHTML = '<div class="nm-uploading">上傳中…</div>';
+  grid.insertBefore(ph, grid.querySelector('.nm-photo-tile.add'));
+  try {
+    const compressed = await compressImage(file);
+    const fd = new FormData();
+    fd.append('voucher_key', _voucherEditing.key);
+    fd.append('photo', compressed);
+    const r = await fetch(API_BASE + '/photos.php', { method: 'POST', body: fd });
+    const d = await r.json();
+    if (d.status === 'ok' && d.path) {
+      _voucherEditing.photos.push(d.path);
+      VOUCHERS[_voucherEditing.key] = VOUCHERS[_voucherEditing.key] || { voucher_key: _voucherEditing.key };
+      VOUCHERS[_voucherEditing.key].photos = _voucherEditing.photos.slice();
+      renderVoucherPhotoGrid();
+      refreshAllVoucherChips();
+    } else {
+      showToast('上傳失敗：' + (d.error || ''));
+      ph.remove();
+    }
+  } catch(e) { showToast('壓縮/上傳失敗'); ph.remove(); }
+}
+
+async function deleteVoucherPhoto(path) {
+  if (!_voucherEditing.key) return;
+  if (!confirm('刪除這張照片？')) return;
+  try {
+    const url = API_BASE + '/photos.php?voucher_key=' + encodeURIComponent(_voucherEditing.key) + '&path=' + encodeURIComponent(path);
+    const r = await fetch(url, { method: 'DELETE' });
+    const d = await r.json();
+    if (d.status === 'ok') {
+      _voucherEditing.photos = d.photos || _voucherEditing.photos.filter(p => p !== path);
+      VOUCHERS[_voucherEditing.key] = VOUCHERS[_voucherEditing.key] || {};
+      VOUCHERS[_voucherEditing.key].photos = _voucherEditing.photos.slice();
+      renderVoucherPhotoGrid();
+      refreshAllVoucherChips();
+    }
+  } catch(e) {}
+}
+
+async function confirmVoucher() {
+  if (!_voucherEditing.key) return;
+  const order_no = document.getElementById('voucher-order').value.trim();
+  const link = document.getElementById('voucher-link').value.trim();
+  const note = document.getElementById('voucher-note').value.trim();
+  try {
+    const r = await fetch(API_BASE + '/vouchers.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ voucher_key: _voucherEditing.key, order_no, link, note }),
+    });
+    const d = await r.json();
+    if (d.status === 'ok') {
+      VOUCHERS[_voucherEditing.key] = VOUCHERS[_voucherEditing.key] || { voucher_key: _voucherEditing.key, photos: _voucherEditing.photos.slice() };
+      Object.assign(VOUCHERS[_voucherEditing.key], { order_no, link, note });
+      refreshAllVoucherChips();
+      showToast('已儲存');
+    }
+  } catch(e) { showToast('儲存失敗'); }
+  closeVoucherModal();
+}
+
+async function clearVoucherAll() {
+  if (!_voucherEditing.key) return;
+  if (!confirm('清空整筆票券資訊與照片？')) return;
+  try {
+    await fetch(API_BASE + '/vouchers.php?voucher_key=' + encodeURIComponent(_voucherEditing.key), { method: 'DELETE' });
+    delete VOUCHERS[_voucherEditing.key];
+    refreshAllVoucherChips();
+    showToast('已清空');
+  } catch(e) {}
+  closeVoucherModal();
+}
+
 // ===== Toast =====
 function showToast(msg){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1A1614;color:#FAF8F5;padding:10px 20px;font-size:11px;font-weight:500;letter-spacing:.08em;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;text-align:center;max-width:85vw;border:1px solid #4A423B;border-radius:99px';document.body.appendChild(t)}t.textContent=msg;t.style.opacity='1';clearTimeout(t._timer);t._timer=setTimeout(()=>{t.style.opacity='0'},2500)}
 
@@ -2144,6 +2455,103 @@ function highlightCarouselCard(dayKey, lat, lng) {
 // ===== Countdown =====
 function updateCountdown(){const t=new Date('2026-05-12T13:00:00+08:00'),n=new Date(),d=t-n,el=document.getElementById('countdown');if(d<=0){el.textContent=n<=new Date('2026-05-16T22:10:00+08:00')?'On the road':'Trip ended';return}const days=Math.floor(d/864e5),hrs=Math.floor((d%864e5)/36e5);el.innerHTML='<span class="num">'+days+'</span>d <span class="num">'+hrs+'</span>h';}
 updateCountdown();setInterval(updateCountdown,60000);
+
+// ===== NOW BAR — 旅行期間 / 提供「現在 / 下一站」 =====
+// 把 stop.time（"13:00"、"15:00-17:00"、"晚餐"、"—" 等）解析出開始分鐘數
+function parseStopMinutes(timeStr) {
+  if (!timeStr) return null;
+  // 取第一個 HH:MM
+  const m = String(timeStr).match(/(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  const h = parseInt(m[1]), mi = parseInt(m[2]);
+  if (h > 23 || mi > 59) return null;
+  return h * 60 + mi;
+}
+
+function getActiveDayKey() {
+  // 旅行期間以韓國時間為準
+  const TRIP = [
+    { key:'day1', d:'2026-05-12' },
+    { key:'day2', d:'2026-05-13' },
+    { key:'day3', d:'2026-05-14' },
+    { key:'day4', d:'2026-05-15' },
+    { key:'day5', d:'2026-05-16' },
+  ];
+  // 取「韓國時區」當下的日期（YYYY-MM-DD）
+  const now = new Date();
+  const krDate = new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Seoul', year:'numeric', month:'2-digit', day:'2-digit' }).format(now);
+  const found = TRIP.find(t => t.d === krDate);
+  return found ? found.key : null;
+}
+
+function getKrNowMinutes() {
+  const fmt = new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Seoul', hour:'2-digit', minute:'2-digit', hour12:false });
+  const [hh, mm] = fmt.format(new Date()).split(':').map(s => parseInt(s));
+  return hh * 60 + mm;
+}
+
+function updateNowBar() {
+  const bar = document.getElementById('now-bar');
+  if (!bar) return;
+  const dayKey = getActiveDayKey();
+  if (!dayKey) { bar.classList.remove('show'); bar.innerHTML=''; return; }
+
+  const stops = (DAYS && DAYS[dayKey]) || DAYS_ORIGINAL[dayKey] || [];
+  if (!stops.length) { bar.classList.remove('show'); return; }
+
+  // 找出有 time 的 stops，按時間排序（已經是順序的，但取 minute）
+  const stopsWithTime = stops
+    .map((s, i) => ({ stop: s, idx: i, mins: parseStopMinutes(s.time) }))
+    .filter(x => x.mins !== null);
+
+  if (!stopsWithTime.length) { bar.classList.remove('show'); return; }
+
+  const nowMin = getKrNowMinutes();
+
+  // 找「正在進行」：最近一個已開始的（min <= nowMin）
+  // 找「下一站」：第一個 mins > nowMin
+  let current = null, next = null;
+  for (const x of stopsWithTime) {
+    if (x.mins <= nowMin) current = x;
+    else if (!next) next = x;
+  }
+
+  // 旅行當天但太早或太晚
+  if (!current && !next) { bar.classList.remove('show'); return; }
+
+  let html = '';
+  if (current) {
+    const s = current.stop;
+    const goBtn = (s.lat && s.lng)
+      ? `<button class="now-bar-go" onclick="navigateTo(${s.lat},${s.lng},'${(s.title||'').replace(/'/g,'&#39;')}')"><i class="fa-solid fa-diamond-turn-right"></i> Go</button>`
+      : '';
+    html += `<div class="now-bar-row">
+      <span class="now-bar-pulse"></span>
+      <span class="now-bar-label">Now</span>
+      <span class="now-bar-time">${escapeHtml(s.time)}</span>
+      <span class="now-bar-title">${escapeHtml(s.title)}</span>
+      ${goBtn}
+    </div>`;
+  }
+  if (current && next) html += '<div class="now-bar-divider"></div>';
+  if (next) {
+    const s = next.stop;
+    const goBtn = (s.lat && s.lng)
+      ? `<button class="now-bar-go" onclick="navigateTo(${s.lat},${s.lng},'${(s.title||'').replace(/'/g,'&#39;')}')"><i class="fa-solid fa-diamond-turn-right"></i> Go</button>`
+      : '';
+    html += `<div class="now-bar-row next">
+      <span class="now-bar-pulse"></span>
+      <span class="now-bar-label">Next</span>
+      <span class="now-bar-time">${escapeHtml(s.time)}</span>
+      <span class="now-bar-title">${escapeHtml(s.title)}</span>
+      ${goBtn}
+    </div>`;
+  }
+  bar.innerHTML = html;
+  bar.classList.add('show');
+}
+updateNowBar();
+setInterval(updateNowBar, 60000);
 
 // ===== Currency =====
 let RATE=45;

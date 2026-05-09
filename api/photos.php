@@ -21,8 +21,12 @@ if (!is_dir($uploadsDir)) {
 
 // ===== POST — 上傳照片 =====
 if ($method === 'POST') {
-    $stopId = (int)($_POST['stop_id'] ?? 0);
-    if (!$stopId) jsonResponse(['error' => 'stop_id required'], 400);
+    $stopId      = (int)($_POST['stop_id'] ?? 0);
+    $voucherKey  = trim($_POST['voucher_key'] ?? '');
+
+    if (!$stopId && $voucherKey === '') {
+        jsonResponse(['error' => 'stop_id or voucher_key required'], 400);
+    }
 
     if (!isset($_FILES['photo']) || $_FILES['photo']['error'] !== UPLOAD_ERR_OK) {
         jsonResponse(['error' => 'photo upload failed'], 400);
@@ -56,7 +60,8 @@ if ($method === 'POST') {
         jsonResponse(['error' => 'target dir not writable', 'path' => $targetDir], 500);
     }
 
-    $filename = $stopId . '-' . time() . '-' . bin2hex(random_bytes(4)) . '.' . $ext;
+    $prefix = $stopId ? ('s' . $stopId) : ('v_' . preg_replace('/[^a-zA-Z0-9_-]/', '', $voucherKey));
+    $filename = $prefix . '-' . time() . '-' . bin2hex(random_bytes(4)) . '.' . $ext;
     $relPath = $monthDir . '/' . $filename;
     $absPath = $targetDir . '/' . $filename;
 
@@ -65,21 +70,36 @@ if ($method === 'POST') {
         jsonResponse(['error' => 'move_uploaded_file failed', 'detail' => $err['message'] ?? '', 'tmp' => $file['tmp_name'], 'dst' => $absPath], 500);
     }
 
-    // 把路徑寫進 stop_notes.photos
-    $stmt = $db->prepare("SELECT photos FROM stop_notes WHERE stop_id = ?");
-    $stmt->execute([$stopId]);
-    $row = $stmt->fetch();
-
-    $photos = ($row && $row['photos']) ? json_decode($row['photos'], true) : [];
-    $photos[] = $relPath;
-    $photosJson = json_encode($photos, JSON_UNESCAPED_UNICODE);
-
-    if ($row) {
-        $stmt = $db->prepare("UPDATE stop_notes SET photos = ? WHERE stop_id = ?");
-        $stmt->execute([$photosJson, $stopId]);
+    if ($stopId) {
+        // stop_notes.photos
+        $stmt = $db->prepare("SELECT photos FROM stop_notes WHERE stop_id = ?");
+        $stmt->execute([$stopId]);
+        $row = $stmt->fetch();
+        $photos = ($row && $row['photos']) ? json_decode($row['photos'], true) : [];
+        $photos[] = $relPath;
+        $photosJson = json_encode($photos, JSON_UNESCAPED_UNICODE);
+        if ($row) {
+            $stmt = $db->prepare("UPDATE stop_notes SET photos = ? WHERE stop_id = ?");
+            $stmt->execute([$photosJson, $stopId]);
+        } else {
+            $stmt = $db->prepare("INSERT INTO stop_notes (stop_id, photos) VALUES (?, ?)");
+            $stmt->execute([$stopId, $photosJson]);
+        }
     } else {
-        $stmt = $db->prepare("INSERT INTO stop_notes (stop_id, photos) VALUES (?, ?)");
-        $stmt->execute([$stopId, $photosJson]);
+        // vouchers.photos
+        $stmt = $db->prepare("SELECT photos FROM vouchers WHERE voucher_key = ?");
+        $stmt->execute([$voucherKey]);
+        $row = $stmt->fetch();
+        $photos = ($row && $row['photos']) ? json_decode($row['photos'], true) : [];
+        $photos[] = $relPath;
+        $photosJson = json_encode($photos, JSON_UNESCAPED_UNICODE);
+        if ($row) {
+            $stmt = $db->prepare("UPDATE vouchers SET photos = ? WHERE voucher_key = ?");
+            $stmt->execute([$photosJson, $voucherKey]);
+        } else {
+            $stmt = $db->prepare("INSERT INTO vouchers (voucher_key, photos) VALUES (?, ?)");
+            $stmt->execute([$voucherKey, $photosJson]);
+        }
     }
 
     jsonResponse(['status' => 'ok', 'path' => $relPath, 'photos' => $photos]);
@@ -87,27 +107,42 @@ if ($method === 'POST') {
 
 // ===== DELETE — 刪一張 =====
 if ($method === 'DELETE') {
-    $stopId = (int)($_GET['stop_id'] ?? 0);
-    $path = $_GET['path'] ?? '';
-    if (!$stopId || !$path) jsonResponse(['error' => 'stop_id and path required'], 400);
+    $stopId     = (int)($_GET['stop_id'] ?? 0);
+    $voucherKey = trim($_GET['voucher_key'] ?? '');
+    $path       = $_GET['path'] ?? '';
+
+    if ((!$stopId && $voucherKey === '') || !$path) {
+        jsonResponse(['error' => '(stop_id or voucher_key) and path required'], 400);
+    }
 
     // 防止路徑穿越
     if (strpos($path, '..') !== false || strpos($path, '/') === 0) {
         jsonResponse(['error' => 'invalid path'], 400);
     }
 
-    $stmt = $db->prepare("SELECT photos FROM stop_notes WHERE stop_id = ?");
-    $stmt->execute([$stopId]);
+    if ($stopId) {
+        $stmt = $db->prepare("SELECT photos FROM stop_notes WHERE stop_id = ?");
+        $stmt->execute([$stopId]);
+    } else {
+        $stmt = $db->prepare("SELECT photos FROM vouchers WHERE voucher_key = ?");
+        $stmt->execute([$voucherKey]);
+    }
     $row = $stmt->fetch();
-    if (!$row) jsonResponse(['error' => 'stop note not found'], 404);
+    if (!$row) jsonResponse(['error' => 'record not found'], 404);
 
     $photos = json_decode($row['photos'], true) ?: [];
     $photos = array_values(array_filter($photos, fn($p) => $p !== $path));
+    $photosJson = json_encode($photos, JSON_UNESCAPED_UNICODE);
 
-    $stmt = $db->prepare("UPDATE stop_notes SET photos = ? WHERE stop_id = ?");
-    $stmt->execute([json_encode($photos, JSON_UNESCAPED_UNICODE), $stopId]);
+    if ($stopId) {
+        $stmt = $db->prepare("UPDATE stop_notes SET photos = ? WHERE stop_id = ?");
+        $stmt->execute([$photosJson, $stopId]);
+    } else {
+        $stmt = $db->prepare("UPDATE vouchers SET photos = ? WHERE voucher_key = ?");
+        $stmt->execute([$photosJson, $voucherKey]);
+    }
 
-    // 刪實體檔（路徑長度 > 0、basename 安全）
+    // 刪實體檔
     $absPath = $uploadsDir . '/' . $path;
     if (file_exists($absPath)) @unlink($absPath);
 
