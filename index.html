@@ -572,7 +572,7 @@ async function apiSync(endpoint, method, body) {
 // ===== ITINERARY DATA =====
 const DAYS_ORIGINAL = {
   day1: [
-    { time:'出發前', title:'📌 購買釜山 PASS', detail:'KKday/Klook 線上購買，到當地憑 QR 換卡。SEALIFE（5/16）需出示', type:'attraction', ticket:true, badges:['提醒'] },
+    { time:'出發前', title:'📌 線上預購釜山 PASS（48h）', detail:'KKday/Klook 先買起來，但「先不要啟用」！PASS 是啟用即開始倒數，等 5/15 當天再掃碼開卡', type:'attraction', ticket:true, badges:['提醒'] },
     { time:'13:00', title:'永和出門', detail:'前往桃園機場', type:'transport' },
     { time:'14:00', title:'桃園機場第一航廈', detail:'報到、安檢、候機', type:'transport' },
     { time:'16:40', title:'虎航 IT210 起飛', detail:'桃園 → 金海國際機場', type:'flight' },
@@ -659,6 +659,7 @@ const DAYS_ORIGINAL = {
   ],
   day4: [
     { time:'09:30', title:'海雲台民宿', detail:'早餐民宿吃麵包', type:'food' },
+    { time:'出門前', title:'🔔 啟用釜山 PASS（48h）', detail:'今天才開卡！啟用後倒數 48 小時，可 cover 今天樂天樂園 + 明天 SEALIFE。掃碼/到旅遊服務中心換實體卡', type:'attraction', ticket:true, badges:['提醒'] },
     { time:'10:00-12:00', title:'Skyline Luge Busan', detail:'帶推車，玩好玩滿 5 次！(Luge ₩512、弟弟也要 ₩1,280)', type:'attraction', ticket:true, lat:35.1860, lng:129.2150, kr:{ name:'스카이라인 루지 부산', addr:'부산광역시 기장군 기장읍 기장해안로 205' } },
     { time:'12:00-13:30', title:'釜山樂天世界冒險樂園', detail:'', type:'attraction', ticket:true, lat:35.1960, lng:129.2130, mapQuery:'롯데월드+어드벤처+부산', badges:['已訂票'] },
     { time:'—', title:'UBER 前往海雲台', detail:'', type:'transport' },
