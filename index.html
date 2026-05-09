@@ -795,29 +795,12 @@ body.is-dragging .menu-section{display:none!important}
 // ===== Service Worker（PWA 離線快取） =====
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then(reg => {
-      // 每次開頁主動檢查 SW 更新；若有新版下載完成 → 重整一次
-      reg.update().catch(()=>{});
-      reg.addEventListener('updatefound', () => {
-        const nw = reg.installing;
-        if (!nw) return;
-        nw.addEventListener('statechange', () => {
-          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-            // 已有舊 SW 控制中 + 新版安裝完 = 升級了
-            console.log('SW updated, reloading…');
-            // 給新 SW 訊號 skip waiting
-            nw.postMessage && nw.postMessage({ type: 'SKIP_WAITING' });
-          }
-        });
-      });
-      // 控制權變更 → 重新整理一次（拿到最新 cache）
-      let refreshing = false;
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (refreshing) return;
-        refreshing = true;
-        window.location.reload();
-      });
-    }).catch(err => console.warn('SW register failed', err));
+    navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+      .then(reg => {
+        // 每次開頁主動檢查 SW 更新（不自動 reload，避免 PWA 閃動）
+        reg.update().catch(()=>{});
+      })
+      .catch(err => console.warn('SW register failed', err));
   });
 }
 
