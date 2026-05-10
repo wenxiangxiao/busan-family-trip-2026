@@ -7,7 +7,7 @@
  *
  * 升版時改 CACHE_VERSION，舊 cache 自動清除。
  */
-const CACHE_VERSION = 'busan-v7';
+const CACHE_VERSION = 'busan-v8';
 const SHELL_CACHE   = `${CACHE_VERSION}-shell`;
 const API_CACHE     = `${CACHE_VERSION}-api`;
 const ASSET_CACHE   = `${CACHE_VERSION}-assets`;

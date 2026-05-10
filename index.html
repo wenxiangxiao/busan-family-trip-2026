@@ -1650,6 +1650,25 @@ document.querySelectorAll('.day-pill').forEach(pill => {
   });
 });
 
+// 預覽模式：?preview=YYYY-MM-DD 模擬旅行日（測試用）
+function getKrDateString() {
+  const params = new URLSearchParams(location.search);
+  const preview = params.get('preview');
+  if (preview === '') {
+    try { sessionStorage.removeItem('busan-preview-date'); } catch(e){}
+  } else if (preview && /^\d{4}-\d{2}-\d{2}$/.test(preview)) {
+    try { sessionStorage.setItem('busan-preview-date', preview); } catch(e){}
+    return preview;
+  }
+  try {
+    const stored = sessionStorage.getItem('busan-preview-date');
+    if (stored && /^\d{4}-\d{2}-\d{2}$/.test(stored)) return stored;
+  } catch(e){}
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date());
+}
+
 // Restore last active page & day on reload, or auto-select today during trip
 (function restoreState() {
   const savedPage = sessionStorage.getItem('busan-active-page');
@@ -1660,9 +1679,7 @@ document.querySelectorAll('.day-pill').forEach(pill => {
     '2026-05-12': 'day1', '2026-05-13': 'day2', '2026-05-14': 'day3',
     '2026-05-15': 'day4', '2026-05-16': 'day5',
   };
-  const krDate = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit'
-  }).format(new Date());
+  const krDate = getKrDateString();
   const autoDay = TRIP_MAP[krDate] || null;
   const isTripDay = !!autoDay;
 
@@ -2614,9 +2631,8 @@ function getActiveDayKey() {
     { key:'day4', d:'2026-05-15' },
     { key:'day5', d:'2026-05-16' },
   ];
-  // 取「韓國時區」當下的日期（YYYY-MM-DD）
-  const now = new Date();
-  const krDate = new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Seoul', year:'numeric', month:'2-digit', day:'2-digit' }).format(now);
+  // 取「韓國時區」當下的日期（YYYY-MM-DD），支援 ?preview= 預覽模式
+  const krDate = getKrDateString();
   const found = TRIP.find(t => t.d === krDate);
   return found ? found.key : null;
 }
