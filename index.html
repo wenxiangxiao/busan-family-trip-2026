@@ -56,7 +56,7 @@ body{font-family:'Inter','Noto Sans TC',sans-serif;color:var(--ink);padding-bott
 .day-pill .pill-date{font-size:10px;letter-spacing:.08em;font-family:'Inter',sans-serif;text-transform:uppercase;font-weight:500;opacity:.7}
 .day-pill.active{color:var(--ink)}
 .day-pill.active::after{content:'';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);width:24px;height:2px;background:var(--accent)}
-.day-pill .today-dot{position:absolute;top:6px;right:6px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.day-pill .today-dot{position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(201,83,58,.6);animation:pulse 2s infinite}
 
 /* ===== BOTTOM NAV ===== */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(250,248,245,.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--rule);z-index:100;padding-bottom:env(safe-area-inset-bottom)}
@@ -142,12 +142,6 @@ body.is-dragging .insert-btn{display:none!important}
 body.is-dragging .transit-bar{display:none!important}
 body.is-dragging .menu-section{display:none!important}
 .drag-placeholder{border:1px dashed var(--ink-5);background:var(--paper-2);margin-bottom:0}
-
-/* Transit bar */
-.transit-bar{display:flex;align-items:center;gap:10px;padding:8px 4px;margin:2px 0;cursor:pointer;transition:opacity .15s;color:var(--ink-4);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
-.transit-bar:active{opacity:.6}
-.transit-bar .tb-line{flex:1;height:1px;background:var(--rule);border-top:1px dashed var(--ink-5);background:none}
-.transit-bar i{color:var(--accent);font-size:10px}
 
 /* Nearby buttons */
 .nearby-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;padding-top:10px;border-top:1px dashed var(--rule)}
@@ -306,6 +300,15 @@ body.is-dragging .menu-section{display:none!important}
 .photo-lightbox.show{display:flex}
 .photo-lightbox img{max-width:100%;max-height:90vh;object-fit:contain}
 .photo-lightbox-close{position:absolute;top:env(safe-area-inset-top, 14px);right:14px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.12);color:var(--paper);display:flex;align-items:center;justify-content:center;border:none;cursor:pointer}
+
+/* ===== FAB Navigate ===== */
+.nav-fab{position:fixed;right:14px;bottom:calc(82px + env(safe-area-inset-bottom));z-index:90;background:var(--ink);color:var(--paper);border:none;width:56px;height:56px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:0 6px 20px rgba(26,22,20,.25);cursor:pointer;transition:transform .15s,box-shadow .15s}
+.nav-fab:active{transform:scale(.92);box-shadow:0 3px 12px rgba(26,22,20,.3)}
+.nav-fab i{font-size:18px;color:var(--accent-mid)}
+.nav-fab .fab-label{font-family:'Fraunces',serif;font-style:italic;font-size:9px;letter-spacing:.06em;color:var(--paper);font-weight:500;line-height:1}
+.nav-fab.fab-disabled{opacity:.35;pointer-events:none}
+.nav-fab .fab-pulse{position:absolute;inset:-4px;border:2px solid var(--accent);border-radius:50%;opacity:0;animation:fabPulse 2.5s infinite}
+@keyframes fabPulse{0%{opacity:.6;transform:scale(1)}100%{opacity:0;transform:scale(1.18)}}
 
 /* ===== NOW BAR ===== */
 .now-bar{display:none;background:var(--ink);color:var(--paper);padding:10px 14px;position:sticky;top:92px;z-index:39;border-bottom:1px solid var(--ink);font-family:'Inter',sans-serif}
@@ -768,6 +771,13 @@ body.is-dragging .menu-section{display:none!important}
   <img id="photo-lightbox-img" src="" alt="">
 </div>
 
+<!-- ========== FAB ========== -->
+<button class="nav-fab" id="nav-fab" onclick="navigateToNextStop()" aria-label="導航到下一站">
+  <span class="fab-pulse" id="fab-pulse" style="display:none"></span>
+  <i class="fa-solid fa-diamond-turn-right"></i>
+  <span class="fab-label">NEXT</span>
+</button>
+
 <!-- ========== BOTTOM NAV ========== -->
 <nav class="bottom-nav">
   <div class="grid grid-cols-4 max-w-lg mx-auto">
@@ -1128,15 +1138,6 @@ function renderDay(dayKey) {
     // Render card
     const cardWrapper = renderStopCard(stop, idx, dayKey, orderedStops);
     timeline.appendChild(cardWrapper);
-
-    // Transit bar between stops with coords
-    if (renderIdx < orderedStops.length - 1) {
-      const nextStop = orderedStops[renderIdx + 1];
-      if (stop.lat && stop.lng && nextStop.lat && nextStop.lng) {
-        const bar = renderTransitBar(stop.lat, stop.lng, nextStop.lat, nextStop.lng);
-        timeline.appendChild(bar);
-      }
-    }
   });
 
   // Insert button at the end
@@ -1401,6 +1402,64 @@ function closeNavChoice() {
   _navTarget = null;
 }
 
+// ===== FAB：導航到「下一站」 =====
+// 找出當下該去的 stop（有座標）
+function findNextStop() {
+  // 旅行期間 → 今天的 day
+  const todayKey = getActiveDayKey();
+  if (todayKey) {
+    const stops = (DAYS && DAYS[todayKey]) || DAYS_ORIGINAL[todayKey] || [];
+    const nowMin = getKrNowMinutes();
+    // 找：時間 > 現在、有座標
+    let best = null;
+    for (const s of stops) {
+      if (!s.lat || !s.lng) continue;
+      const m = parseStopMinutes(s.time);
+      if (m === null) continue;
+      if (m >= nowMin) { best = s; break; }
+    }
+    // 如果今天時間都過了（已過最後一個有座標 stop）→ 找該天最後一個有座標的
+    if (!best) {
+      for (let i = stops.length - 1; i >= 0; i--) {
+        if (stops[i].lat && stops[i].lng) { best = stops[i]; break; }
+      }
+    }
+    return best ? { stop: best, dayKey: todayKey } : null;
+  }
+  // 非旅行期間 → 最早的有座標 stop
+  for (const k of ['day1','day2','day3','day4','day5']) {
+    const stops = (DAYS && DAYS[k]) || DAYS_ORIGINAL[k] || [];
+    for (const s of stops) {
+      if (s.lat && s.lng) return { stop: s, dayKey: k };
+    }
+  }
+  return null;
+}
+
+function refreshFabState() {
+  const fab = document.getElementById('nav-fab');
+  if (!fab) return;
+  const target = findNextStop();
+  if (target && target.stop && target.stop.lat) {
+    fab.classList.remove('fab-disabled');
+    fab.title = '前往：' + target.stop.title;
+    // 旅行期間 + 真的「現在該去」→ 顯示 pulse
+    const pulse = document.getElementById('fab-pulse');
+    if (pulse) pulse.style.display = getActiveDayKey() ? 'block' : 'none';
+  } else {
+    fab.classList.add('fab-disabled');
+  }
+}
+
+function navigateToNextStop() {
+  const target = findNextStop();
+  if (!target || !target.stop) {
+    showToast('找不到可導航的地點');
+    return;
+  }
+  navigateTo(target.stop.lat, target.stop.lng, target.stop.title);
+}
+
 // ===== DRAG TO REORDER (Touch + Mouse) =====
 function attachDragListeners(dayKey) {
   const timeline = document.getElementById(dayKey + '-timeline');
@@ -1596,24 +1655,21 @@ document.querySelectorAll('.day-pill').forEach(pill => {
   const savedPage = sessionStorage.getItem('busan-active-page');
   const savedDay = sessionStorage.getItem('busan-active-day');
 
-  // Auto-detect if today is a trip day (5/12-5/16)
-  const now = new Date();
-  const tripDates = [
-    new Date('2026-05-12T00:00:00+09:00'),
-    new Date('2026-05-13T00:00:00+09:00'),
-    new Date('2026-05-14T00:00:00+09:00'),
-    new Date('2026-05-15T00:00:00+09:00'),
-    new Date('2026-05-16T00:00:00+09:00'),
-  ];
-  let autoDay = null;
-  for (let i = 0; i < tripDates.length; i++) {
-    const start = tripDates[i];
-    const end = new Date(start); end.setDate(end.getDate() + 1);
-    if (now >= start && now < end) { autoDay = 'day' + (i + 1); break; }
-  }
+  // 用「韓國當地日期」判定今天是哪一個 day（避免跨時區誤判）
+  const TRIP_MAP = {
+    '2026-05-12': 'day1', '2026-05-13': 'day2', '2026-05-14': 'day3',
+    '2026-05-15': 'day4', '2026-05-16': 'day5',
+  };
+  const krDate = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date());
+  const autoDay = TRIP_MAP[krDate] || null;
+  const isTripDay = !!autoDay;
 
-  // If we're during the trip and no saved state, auto-jump to today
-  const targetDay = savedDay || autoDay;
+  // 旅行期間 → 強制跳當天（即使 sessionStorage 有別的，也覆蓋）
+  // 非旅行期間 → 沿用 savedDay（默認 overview）
+  const targetDay = isTripDay ? autoDay : (savedDay || null);
+
   if (savedPage) {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1622,6 +1678,13 @@ document.querySelectorAll('.day-pill').forEach(pill => {
     if (navItem) navItem.classList.add('active');
     if (pageEl) pageEl.classList.add('active');
   }
+  // 旅行期間，page 強制 page-itinerary
+  if (isTripDay) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelector('.nav-item[data-page="page-itinerary"]')?.classList.add('active');
+    document.getElementById('page-itinerary')?.classList.add('active');
+  }
   if (targetDay) {
     document.querySelectorAll('.day-pill').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.sub-panel').forEach(p => p.classList.remove('active'));
@@ -1629,16 +1692,48 @@ document.querySelectorAll('.day-pill').forEach(pill => {
     const panel = document.getElementById(targetDay);
     if (pill) pill.classList.add('active');
     if (panel) panel.classList.add('active');
-    // Highlight today's pill with a subtle indicator
     if (autoDay) {
       const todayPill = document.querySelector(`.day-pill[data-day="${autoDay}"]`);
       if (todayPill && !todayPill.querySelector('.today-dot')) {
         const dot = document.createElement('span');
         dot.className = 'today-dot';
-        dot.style.cssText = 'width:5px;height:5px;border-radius:50%;background:#ef4444;display:block;margin-top:1px';
         todayPill.appendChild(dot);
       }
     }
+  }
+
+  // 旅行期間：載入完行程卡片後，自動滾到「當前行程」
+  if (isTripDay) {
+    // 算韓國當下時間（分鐘）
+    const fmt = new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Seoul', hour:'2-digit', minute:'2-digit', hour12:false });
+    const [hh, mm] = fmt.format(new Date()).split(':').map(s => parseInt(s));
+    const nowMin = hh * 60 + mm;
+
+    // renderDay 是同步呼叫但要等 DOM 內容渲染完，所以延遲一點
+    setTimeout(() => {
+      const panel = document.getElementById(autoDay);
+      if (!panel) return;
+      const cards = panel.querySelectorAll('.tl-card');
+      if (!cards.length) return;
+      // 找：第一個 time >= nowMin 的卡（沒有則最後一張）
+      const stops = (typeof DAYS !== 'undefined' && DAYS[autoDay]) || [];
+      let targetIdx = -1;
+      for (let i = 0; i < stops.length; i++) {
+        const m = (stops[i].time || '').match(/(\d{1,2}):(\d{2})/);
+        if (!m) continue;
+        const stopMin = parseInt(m[1]) * 60 + parseInt(m[2]);
+        if (stopMin >= nowMin) { targetIdx = i; break; }
+      }
+      // 如果都過了，捲到最後一張
+      if (targetIdx < 0) targetIdx = cards.length - 1;
+      const card = cards[targetIdx];
+      if (card) {
+        // 讓 sticky header + day pill bar (~140px) 不擋住卡片
+        const offset = 150;
+        const top = card.getBoundingClientRect().top + window.pageYOffset - offset;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      }
+    }, 400);
   }
 })();
 
@@ -2592,8 +2687,12 @@ function updateNowBar() {
   bar.innerHTML = html;
   bar.classList.add('show');
 }
-updateNowBar();
-setInterval(updateNowBar, 60000);
+function tickClock() {
+  updateNowBar();
+  refreshFabState();
+}
+tickClock();
+setInterval(tickClock, 60000);
 
 // ===== Currency =====
 let RATE=45;
