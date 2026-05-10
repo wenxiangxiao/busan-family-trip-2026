@@ -1,6 +1,9 @@
 FROM php:8.1-apache
 RUN docker-php-ext-install pdo pdo_mysql
-RUN a2enmod rewrite
+RUN a2enmod rewrite headers
+
+# 讓 .htaccess 的 Header / FilesMatch 等指令生效
+RUN sed -i 's!AllowOverride None!AllowOverride All!g' /etc/apache2/apache2.conf
 
 # Allow larger uploads (Canvas-compressed photos ≤ 5MB)
 RUN { \
